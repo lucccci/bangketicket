@@ -27,8 +27,16 @@ $totalPages = ceil($totalRows / $rowsPerPage);
 $startIndex = ($currentPage - 1) * $rowsPerPage;
 $startIndex = max(0, $startIndex); // Ensure start index is not negative
 
-// Fetch vendors with pagination
-$sql = "SELECT * FROM vendor_list LIMIT $startIndex, $rowsPerPage";
+// Fetch vendors with their status (Paid or Unpaid) based on transactions
+$sql = "SELECT vendor_list.*, 
+        CASE 
+            WHEN COUNT(vendor_transaction.vendorID) > 0 THEN 'Paid'
+            ELSE 'Unpaid'
+        END AS status
+        FROM vendor_list 
+        LEFT JOIN vendor_transaction ON vendor_list.vendorID = vendor_transaction.vendorID
+        GROUP BY vendor_list.vendorID
+        LIMIT $startIndex, $rowsPerPage";
 $result = $conn->query($sql);
 
 // Check if there are any vendors
@@ -607,8 +615,8 @@ body {
                     <td><?php echo $customer['fname']; ?></td>
                     <td><?php echo $customer['mname']; ?></td>
                     <td><?php echo $customer['lname']; ?></td>
-                    <td><?php echo !empty($customer['suffix']) ? $customer['suffix'] : 'N/A'; ?></td>
-                    <td></td>
+                      <td><?php echo !empty($customer['suffix']) ? $customer['suffix'] : 'N/A'; ?></td>
+            <td><?php echo $customer['status']; ?></td>  <!-- Display the status (Paid or Unpaid) -->
                     <td><?php echo $customer['contactNo']; ?></td>
                     <td>
                         <button class="action-view" onclick="openQRModal('<?php echo $customer['vendorID']; ?>')">View QR</button>
