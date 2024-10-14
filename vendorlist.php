@@ -27,17 +27,20 @@ $totalPages = ceil($totalRows / $rowsPerPage);
 $startIndex = ($currentPage - 1) * $rowsPerPage;
 $startIndex = max(0, $startIndex); // Ensure start index is not negative
 
-// Fetch vendors with their status (Paid or Unpaid) based on transactions
+// Fetch vendors with their status (Paid or Unpaid) based on today's transactions
 $sql = "SELECT vendor_list.*, 
         CASE 
             WHEN COUNT(vendor_transaction.vendorID) > 0 THEN 'Paid'
             ELSE 'Unpaid'
         END AS status
         FROM vendor_list 
-        LEFT JOIN vendor_transaction ON vendor_list.vendorID = vendor_transaction.vendorID
+        LEFT JOIN vendor_transaction 
+        ON vendor_list.vendorID = vendor_transaction.vendorID
+        AND DATE(vendor_transaction.date) = CURDATE() -- Only consider today's transactions
         GROUP BY vendor_list.vendorID
         LIMIT $startIndex, $rowsPerPage";
 $result = $conn->query($sql);
+
 
 // Check if there are any vendors
 if ($result->num_rows > 0) {
