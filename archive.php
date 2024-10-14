@@ -36,7 +36,7 @@ if ($result->num_rows > 0) {
 
         body {
             background-color: #F2F7FC;
-            font-family: 'Open Sans', sans-serif;
+            font-family: 'poppins', sans-serif;
         }
         
         /* Sidebar */
@@ -453,7 +453,52 @@ if ($result->num_rows > 0) {
   background-color: #2A416F;
     color: #fff;
 }
+.expand-collapse-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    outline: none;
+    color: #031F4E;
+    transition: transform 0.3s ease;
+}
 
+.expand-collapse-btn i {
+    font-size: 16px;
+}
+
+.vendor-row .expanded .expand-collapse-btn i {
+    transform: rotate(90deg); /* Rotate icon when expanded */
+}
+/* Style for the info-title */
+/* Style for the info-title */
+.info-title {
+    font-size: 16px;
+    font-weight: bold;
+    color: #031F4E;
+    margin-bottom: 10px;
+}
+
+/* Apply styling for the rows with additional information */
+.additional-info .info-row {
+    padding-left: 10px;
+    border-left: 3px solid #031F4E; /* Blue left border */
+    margin-bottom: 10px;
+    padding-bottom: 5px;
+}
+
+/* Style for the strong tags inside .additional-info */
+.additional-info strong {
+    display: inline-block;
+    width: 150px; /* Adjust width if needed to align text */
+    text-align: left; /* Align text to the left */
+    font-weight: bold;
+    margin-right: 10px; /* Space between label and value */
+}
+
+/* Ensure text alignment for the .additional-info container */
+.additional-info {
+    text-align: left; /* Ensure text is aligned to the left */
+}
     </style>
 </head>
 <body>
@@ -468,7 +513,7 @@ if ($result->num_rows > 0) {
     <a href="product.php"><i class="fas fa-box"></i> Product</a>
 
     <div class="dropdown">
-        <a href="#" id="vendorDropdown" class="dropdown-toggle"><i class="fas fa-users"></i> Vendors</a>
+        <a href="vendorlist.php" id="vendorDropdown" class="dropdown-toggle"><i class="fas fa-users"></i> Vendors</a>
         <div id="vendorDropdownContent" class="dropdown-content" style="display: none;">
             <a href="vendorlist.php" id="vendorListLink"><i class="fas fa-list"></i> Vendor List</a>
             <a href="transaction.php"><i class="fas fa-dollar-sign"></i> Transactions</a>
@@ -520,55 +565,72 @@ if ($result->num_rows > 0) {
 
         <!-- Start of collector table -->
         <div class="registered-vendors">
-    <table class="usersTable">
-        <thead>
+        <table class="usersTable">
+    <thead>
+        <tr>
+            <th></th> <!-- Chevron column -->
+            <th>Vendor ID</th>
+            <th>First Name</th>
+            <th>Middle Name</th>
+            <th>Last Name</th>
+            <th>Suffix</th> <!-- Add Suffix column -->
+            <th>Status</th> <!-- Add Status column -->
+            <th>Contact #</th>
+            <th></th>
+            <th>Action</th>
+        </tr>
+    </thead>
+    <tbody>
+        <?php if (empty($archive_vendors)) : ?>
             <tr>
-                <th>Vendor ID</th>
-                <th>First Name</th>
-                <th>Middle Name</th>
-                <th>Last Name</th>
-                <th>Contact #</th>
-                <th>Action</th>
+                <td colspan="9" style="text-align: left;">No records found</td>
             </tr>
-        </thead>
-        <tbody>
-            <?php if (empty($archive_vendors)) : ?>
-                <tr>
-                    <td colspan="6" style="text-align: left;">No records found</td>
+        <?php else : ?>
+            <?php foreach ($archive_vendors as $vendor) : ?>
+                <tr class="vendor-row">
+                    <td>
+                        <button class="expand-collapse-btn" onclick="toggleDetails(this)">
+                            <i class="fas fa-chevron-right"></i>
+                        </button>
+                    </td>
+                    <td><b><?php echo htmlspecialchars($vendor['vendorID']); ?></b></td>
+                    <td><?php echo htmlspecialchars($vendor['fname']); ?></td>
+                    <td><?php echo htmlspecialchars($vendor['mname']); ?></td>
+                    <td><?php echo htmlspecialchars($vendor['lname']); ?></td>
+                    <td><?php echo htmlspecialchars($vendor['suffix']); ?></td> <!-- Display Suffix -->
+                    <td></td>
+                    <td><?php echo htmlspecialchars($vendor['contactNo']); ?></td>
+                    <td><td>
+                        <button class="action-view" onclick="openQRModal('<?php echo htmlspecialchars($vendor['vendorID']); ?>')">View QR</button>
+                        <button class="action-restore" onclick="restoreVendor('<?php echo htmlspecialchars($vendor['vendorID']); ?>')">
+                            <i class="fas fa-undo"></i>
+                        </button>
+                    </td>
                 </tr>
-            <?php else : ?>
-                <?php foreach ($archive_vendors as $vendor) : ?>
-                    <tr class="vendor-row" data-vendor-id="<?php echo htmlspecialchars($vendor['vendorID']); ?>">
-                        <td><b><?php echo htmlspecialchars($vendor['vendorID']); ?></b></td>
-                        <td><?php echo htmlspecialchars($vendor['fname']); ?></td>
-                        <td><?php echo htmlspecialchars($vendor['mname']); ?></td>
-                        <td><?php echo htmlspecialchars($vendor['lname']); ?></td>
-                        <td><?php echo htmlspecialchars($vendor['contactNo']); ?></td>
-                        <td>
-                            <button class="action-view" onclick="openQRModal('<?php echo htmlspecialchars($vendor['vendorID']); ?>')">View QR</button>
-                            <button class="action-restore" onclick="restoreVendor('<?php echo htmlspecialchars($vendor['vendorID']); ?>')">
-                                <i class="fas fa-undo"></i>
-                            </button>
-                        </td>
-                    </tr>
-                    <tr class="vendor-details" id="details-<?php echo htmlspecialchars($vendor['vendorID']); ?>" style="display:none;">
-                        <td colspan="6">
-                            <p>Suffix: <?php echo htmlspecialchars($vendor['suffix']); ?></p>
-                            <p>Status:</p>
-                            <p>Gender: <?php echo htmlspecialchars($vendor['gender']); ?></p>
-                            <p>Birthday: <?php echo htmlspecialchars($vendor['birthday']); ?></p>
-                            <p>Age: <?php echo htmlspecialchars($vendor['age']); ?></p>
-                            <p>Province: <?php echo htmlspecialchars($vendor['province']); ?></p>
-                            <p>Municipality: <?php echo htmlspecialchars($vendor['municipality']); ?></p>
-                            <p>Barangay: <?php echo htmlspecialchars($vendor['barangay']); ?></p>
-                            <p>House #: <?php echo htmlspecialchars($vendor['houseNo']); ?></p>
-                            <p>Street Name: <?php echo htmlspecialchars($vendor['streetname']); ?></p>
-                        </td>
-                    </tr>
-                <?php endforeach; ?>
-            <?php endif; ?>
-        </tbody>
-    </table>
+                <!-- Hidden additional details row with the title -->
+                <tr class="additional-info" id="details-<?php echo htmlspecialchars($vendor['vendorID']); ?>" style="display:none;">
+                    <td colspan="9">
+                        <div class="info-title">
+                            <strong>Additional Details</strong>
+                        </div>
+                        <!-- Each row of details wrapped in a div with the class 'info-row' -->
+                        <div class="info-row">Gender: <?php echo htmlspecialchars($vendor['gender']); ?></div>
+                        <div class="info-row">Birthday: <?php echo htmlspecialchars($vendor['birthday']); ?></div>
+                        <div class="info-row">Age: <?php echo htmlspecialchars($vendor['age']); ?></div>
+                        <div class="info-row">Province: <?php echo htmlspecialchars($vendor['province']); ?></div>
+                        <div class="info-row">Municipality: <?php echo htmlspecialchars($vendor['municipality']); ?></div>
+                        <div class="info-row">Barangay: <?php echo htmlspecialchars($vendor['barangay']); ?></div>
+                        <div class="info-row">House #: <?php echo htmlspecialchars($vendor['houseNo']); ?></div>
+                        <div class="info-row">Street Name: <?php echo htmlspecialchars($vendor['streetname']); ?></div>
+                    </td>
+                </tr>
+
+            <?php endforeach; ?>
+        <?php endif; ?>
+    </tbody>
+</table>
+
+
 </div>
 
 
@@ -591,18 +653,29 @@ if ($result->num_rows > 0) {
 
     for (let i = 1; i < rows.length; i++) { // Start from index 1 to skip the header row
         const cells = rows[i].getElementsByTagName("td");
+
+        // Skip hidden detail rows (those that don't have the expected number of columns)
+        if (cells.length < 6) {
+            continue;
+        }
+
         let isVisible = true; // Flag for row visibility
 
-        if (filterType === "vendorID" && cells[1]) { // Check vendor ID (second column)
-            isVisible = cells[1].textContent.toLowerCase().includes(filterValue);
-        } else if (filterType === "lname" && cells[4]) { // Check last name (fifth column)
-            isVisible = cells[4].textContent.toLowerCase().includes(filterValue);
+        if (filterType === "vendorID" && cells[0]) { // Check vendor ID (first column)
+            isVisible = cells[0].textContent.toLowerCase().includes(filterValue);
+        } else if (filterType === "lname" && cells[3]) { // Check last name (fourth column)
+            isVisible = cells[3].textContent.toLowerCase().includes(filterValue);
+        } else if (filterType === "paid" && cells[5]) { // Check Paid status (adjust as needed)
+            isVisible = cells[5].textContent.toLowerCase() === 'paid';
+        } else if (filterType === "unpaid" && cells[5]) { // Check Unpaid status (adjust as needed)
+            isVisible = cells[5].textContent.toLowerCase() === 'unpaid';
         }
 
         // Show or hide the row based on the filter match
         rows[i].style.display = isVisible ? "" : "none";
     }
 }
+
 
 function restoreVendor(vendorID) {
     if (confirm('Are you sure you want to restore this vendor?')) {
@@ -636,25 +709,33 @@ function exportToCSV() {
 }
 
 
-// Toggle the vendors dropdown when "Vendors" is clicked
-document.querySelector('#vendorDropdown').addEventListener('click', function(event) {
-    event.preventDefault(); // Prevent the default behavior of the link
+function toggleDetails(button) {
+    var row = button.closest('tr');
+    var nextRow = row.nextElementSibling;
 
-    // Show the dropdown content
-    const dropdownContent = document.getElementById('vendorDropdownContent');
-    dropdownContent.style.display = 'block';
+    // Close all other expanded rows before expanding the current one
+    document.querySelectorAll('.additional-info').forEach(function(otherRow) {
+        if (otherRow !== nextRow) {
+            otherRow.style.display = 'none';
+            // Reset the expand/collapse button icon
+            otherRow.previousElementSibling.querySelector('.expand-collapse-btn i').classList.remove('fa-chevron-down');
+            otherRow.previousElementSibling.querySelector('.expand-collapse-btn i').classList.add('fa-chevron-right');
+        }
+    });
 
-    // Add the 'active' class to both the "Vendors" and "Vendor List" links
-    document.querySelector('#vendorDropdown').classList.add('active');
-    document.querySelector('#vendorListLink').classList.add('active');
-
-    // Redirect to vendorlist.php
-    window.location.href = 'vendorlist.php';
-});
-
-// Ensure the dropdown content is hidden initially
-document.getElementById('vendorDropdownContent').style.display = 'none';
-
+    // Toggle the current row
+    if (nextRow && nextRow.classList.contains('additional-info')) {
+        if (nextRow.style.display === 'none' || nextRow.style.display === '') {
+            nextRow.style.display = 'table-row';
+            button.querySelector('i').classList.remove('fa-chevron-right');
+            button.querySelector('i').classList.add('fa-chevron-down');
+        } else {
+            nextRow.style.display = 'none';
+            button.querySelector('i').classList.remove('fa-chevron-down');
+            button.querySelector('i').classList.add('fa-chevron-right');
+        }
+    }
+}
 // Toggle the custom dropdown when the button is clicked
 document.querySelector('.custom-dropdown-btn').addEventListener('click', function(event) {
     event.stopPropagation(); // Prevent event from affecting other elements like the side menu
@@ -673,20 +754,6 @@ window.onclick = function(event) {
         }
     }
 };
-// Add an event listener to toggle the details row when the vendor row is clicked
-document.querySelectorAll('.vendor-row').forEach(row => {
-    row.addEventListener('click', function () {
-        const vendorId = this.getAttribute('data-vendor-id');
-        const detailsRow = document.getElementById('details-' + vendorId);
-
-        // Toggle visibility of the details row
-        if (detailsRow.style.display === 'none' || detailsRow.style.display === '') {
-            detailsRow.style.display = 'table-row';
-        } else {
-            detailsRow.style.display = 'none';
-        }
-    });
-});
 function openQRModal(vendorID) {
     const qrModalContent = document.getElementById("qrModalContent");
     const vendors = <?php echo json_encode($archive_vendors); ?>;
