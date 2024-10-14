@@ -1,0 +1,12 @@
+.logo {
+    text-align: center;
+    padding: 20px;
+  }
+
+  .logo img {
+    max-width: 100%;
+    height: auto;
+    margin-top:10%;
+    margin-bottom: 25%;
+  }
+  

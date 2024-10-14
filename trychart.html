@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Monthly Income Chart</title>
+    <!-- Link to Chart.js library -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        /* Add any custom CSS styles here */
+    </style>
+</head>
+<body>
+    <div style="width: 80%; margin: auto;">
+        <canvas id="incomeChart"></canvas>
+    </div>
+
+    <script>
+        // Data for the chart
+        var ctx = document.getElementById('incomeChart').getContext('2d');
+        var myChart = new Chart(ctx, {
+            type: 'bar', // Bar chart type
+            data: {
+                labels: ['Monthly Income'],
+                datasets: [{
+                    label: 'Monthly Income in Pesos',
+                    data: [90000], // Monthly income data
+                    backgroundColor: 'rgba(54, 162, 235, 0.2)', // Color for the bars
+                    borderColor: 'rgba(54, 162, 235, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                scales: {
+                    yAxes: [{
+                        ticks: {
+                            beginAtZero: true
+                        }
+                    }]
+                }
+            }
+        });
+    </script>
+</body>
+</html>

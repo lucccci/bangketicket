@@ -1,0 +1,132 @@
+.side-menu {
+            font-family: 'poppins', sans-serif;
+            width: 260px;
+            height: 100vh;
+            background-color: #fff;
+            color: #031F4E;
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: 1000;
+            overflow-y: auto;
+            transition: width 0.3s;
+            padding: 2px;
+        }
+
+        .side-menu .logo {
+            text-align: center;
+            padding: 20px;
+        }
+
+        .side-menu .logo img {
+            max-width: 100%;
+            height: auto;
+        }
+
+        .side-menu a {
+            display: flex;
+            align-items: center;
+            padding: 15px 20px;
+            color: #031F4E;
+            text-decoration: none;
+            transition: background 0.3s, color 0.3s;
+        }
+
+        .side-menu a i {
+            margin-right: 10px;
+        }
+
+        .side-menu a.active {
+            background-color: #031F4E;
+            color: #fff;
+        }
+
+        .side-menu a.active i {
+            color: #fff;
+        }
+
+        .side-menu a:hover:not(.active) {
+            background-color: #2A416F;
+            color: #fff;
+        }
+
+        .main {
+            font-family: 'poppins', sans-serif;
+            position: absolute;
+            top: 60px;
+            width: calc(100% - 260px);
+            left: 260px;
+            min-height: calc(100vh - 60px);
+            background: #F2F7FC;
+            padding: 20px;
+        }
+
+        /* Panel for the Collector Table */
+        .panel {
+            background-color: #ffffff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+
+        .panel h2 {
+            margin-top: 0;
+            color: #031F4E;
+        }
+
+        .collector-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            font-size: 1em;
+            font-family: 'Poppins', sans-serif;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.15);
+        }
+
+        .collector-table thead tr {
+            background-color: #031F4E;
+            color: white;
+            text-align: left;
+            font-weight: bold;
+        }
+
+        .collector-table th, .collector-table td {
+            padding: 12px 15px;
+        }
+
+        .collector-table tbody tr {
+            background-color: #f9f9f9;
+            border-bottom: 1px solid #dddddd;
+        }
+
+        .collector-table tbody tr:nth-of-type(even) {
+            background-color: #f3f3f3;
+        }
+
+        .collector-table tbody tr:hover {
+            background-color: #f1f1f1;
+        }
+
+        /* Action buttons */
+        .edit-btn, .delete-btn {
+            padding: 5px 10px;
+            border-radius: 5px;
+            text-decoration: none;
+            font-size: 14px;
+            margin-right: 5px;
+            color: white;
+            display: inline-block;
+        }
+
+        .edit-btn {
+            background-color: #4CAF50;
+        }
+
+        .delete-btn {
+            background-color: #f44336;
+        }
+
+        .edit-btn i, .delete-btn i {
+            margin-right: 5px;
+        }

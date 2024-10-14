@@ -1,0 +1,249 @@
+body {
+    margin: 0;
+    font-family: 'Open Sans', sans-serif;
+    background-color: #F2F7FC;
+    position: relative;
+  }
+  
+  .overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 60%;
+    height: 60px;
+    background-color: #ffffff;
+    z-index: 0;
+    transition: z-index 0.5s;
+  }
+  .side-menu {
+    width: 260px;
+    height: 100vh;
+    background-color: #fff;
+    color: #031F4E;
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 1000;
+    overflow-y: auto;
+    transition: width 0.3s;
+    padding: 2px;
+  }
+  
+  
+  .side-menu a {
+    display: flex;
+    align-items: center;
+    padding: 15px 20px;
+    color: #031F4E;
+    text-decoration: none;
+    transition: background 0.3s, color 0.3s;
+  }
+  
+  .side-menu a i {
+    margin-right: 10px;
+  }
+  
+  .side-menu a.active {
+    background-color: #031F4E;
+    color: #fff;
+  }
+  
+  .side-menu a.active i {
+    color: #fff;
+  }
+  
+  .side-menu a:hover:not(.active) {
+    background-color: #2A416F;
+    color: #fff;
+  }
+
+  
+  .modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+  }
+  
+  .modal-content {
+    background-color: #fefefe;
+    margin: auto;
+    margin-top: 150px;
+    padding: 10px;
+    border: 1px solid #888;
+    max-width: 300px; /* Adjusted width */
+    text-align: center;
+    position: relative;
+    border-radius: 5px;
+  }
+
+  .close {
+    color: #aaa;
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+  }
+  
+  .close:hover,
+  .close:focus {
+    color: black;
+    text-decoration: none;
+    cursor: pointer;
+  }
+
+  .main-content {        
+    background-color: #F2F7FC;
+    padding: 20px;
+    margin-left: 250px;
+    height: 100vh;
+    box-sizing: border-box;
+  }
+
+  .panel {
+    margin-top: 80px;
+    background-color: #ffffff;
+    padding: 20px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  }
+
+  p{
+    color: red;
+    font-size: x-small;
+  }
+  
+  form {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+
+  form label {
+    font-weight: bold;
+  }
+
+  form input {
+    width: 70%;
+    padding: 15px;
+    box-sizing: border-box;
+    margin-top: 5px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+  }
+
+  form select  {
+    width: 70%;
+    padding: 15px;
+    box-sizing: border-box;
+    margin-top: 5px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+  }
+
+  form input[type="submit"] {
+      margin-top: 50px;
+    margin-left: 65%;
+    padding: 15px 40px;
+    background-color: #031F4E;
+    color: #fff;
+    border: none;
+    cursor: pointer;
+  }
+
+  form input[type="submit"]:hover {
+    background-color: #246ba9;
+  }
+
+  /* Add the following CSS for the Print QR Code button */
+  #printButton {
+    margin-top: 10px;
+    padding: 10px 20px;
+    background-color: #031F4E;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+  }
+
+  #printButton:hover {
+    background-color: #246ba9;
+  }
+  /* Responsive */
+@media (max-width: 1115px) {
+  .side-menu {
+      width: 60px;
+  }
+  .main {
+      left: 60px;
+      width: calc(100% - 60px);
+  }
+} 
+
+
+
+.phone-input-container {
+    display: flex;
+    align-items: center;
+    width: 393px;
+  }
+  
+  .phone-input-container input[type="text"] {
+    flex: 1;
+  }
+  
+  .phone-input-container span {
+background-color: #f0f0f0;
+padding: 12px;
+border-radius: 5px;
+border: 1px solid #ccc;
+border-right: none;
+display: flex;
+align-items: center;
+margin-right:-3px;
+margin-top:3px;
+
+}
+
+.phone-input-container img {
+width: 20px; /* Adjust the width as needed */
+height: auto;
+margin-right: 5px; /* Space between the flag and the prefix */
+}
+
+.address-heading {
+  font-size: 1.2em;
+  margin-bottom: 5px;
+  color: #1A3B8B; /* Adjust the color as needed */
+}
+.personalinfo-heading {
+
+font-size: 1.2em;
+  margin-bottom: 5px;
+  color: #1A3B8B  ; /* Adjust the color as needed */
+}
+/* Ensure the form has full width */
+.form-container {
+  display: flex;
+  flex-wrap: wrap;
+  width: 100%;
+}
+
+/* Align elements within the form */
+.form-container input,
+.form-container select,
+.form-container label {
+  margin: 5px 0;
+  width: calc(50% - 20px); /* Adjust width if necessary */
+  box-sizing: border-box;
+}
+
+/* Make sure the submit button is aligned correctly */
+.form-container input[type="submit"] {
+  margin: 10px 0;
+  width: auto; /* Adjust this if you want the button to span full width */
+  align-self: center; /* Center the button */
+}

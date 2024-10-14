@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Login</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+<link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/slick-carousel/1.8.1/slick.css"/>
+<link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/slick-carousel/1.8.1/slick-theme.css"/>
+<link rel="icon" href="pics/logo-bt.png">
+<style>
+ body {
+    margin: 0;
+    padding: 0;
+    font-family: Arial, sans-serif; 
+    background-image: url('pics/bg.png'); 
+    background-size: cover;
+    background-repeat: no-repeat;
+    overflow: hidden; /* Disable scrolling */
+}
+
+.header {
+    display: flex;
+    align-items: center;
+    padding: 8px;
+    background-color:#031F4E;
+    color: #fff;
+}
+
+.header img {
+    width: 45px;
+    height: 45px;
+    border-radius: 50%;
+    margin-right: 10px;
+}
+
+.text-container {
+    display: flex;
+    flex-direction: column;
+}
+
+.header .logo-text {
+    font-family: 'Inter'; 
+    font-size: 10px;
+}
+
+.header .country-text {
+    font-weight: bold;
+    font-family: 'Inter'; 
+}
+
+.login-panel {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: calc(100vh - 80px);
+    flex-direction: column;
+    overflow: hidden; /* Disable scrolling */
+}
+
+.login-form {
+    background-color: rgba(250, 251, 255, 0.538); 
+    border-radius: 25px;
+    padding: 30px;
+    box-shadow: 0px 0px 10px 0px rgba(0, 0, 0, 0.1);
+    max-width: 350px;
+    text-align: center;
+    max-height: 575px;
+    overflow-y: hidden; /* Disable vertical scrolling */
+    overflow-x: hidden; /* Disable horizontal scrolling */
+    margin-top: 100px;
+    margin-left: auto; 
+    margin-right: 130px;   
+    border: 2px solid black; 
+}
+
+
+.carousel-container {
+    width: 600px;
+    margin-left: 250px;
+    position: absolute;
+    top: 60%;
+    transform: translateY(-50%);
+    left: 0;
+    transition: transform 0.5s ease, filter 0.5s ease; /* Add transition effect */
+}
+
+.carousel-slide {
+    height: 450px;
+    border-radius: 25px;
+    overflow: hidden;
+    box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.3);
+    padding: 10px;
+    transition: transform 0.5s ease,  filter 0.5s ease; /* Add transition effect */
+}
+
+.carousel-slide img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 25px;
+    transition: transform 0.5s ease,  filter 0.5s ease; /* Add transition effect */
+}
+
+
+.login-form input {
+    padding: 10px;
+    margin-bottom: 15px;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+    font-size: 16px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.login-form label {
+    display: block;
+    font-size: 14px;
+    margin-bottom: 5px;
+    text-align: left;
+}
+
+.login-button {
+    padding: 10px;
+    border: none;
+    border-radius: 5px;
+    background-color:#031F4E;
+    color: #fff;
+    font-size: 16px;
+    cursor: pointer;
+    width: 100%;
+}
+
+.password-toggle {
+    position: absolute;
+    right: 10px;
+    top: 38%;
+    transform: translateY(-50%);
+    cursor: pointer;
+}
+
+.forgot-password {
+    margin-top: 10px;
+    font-size: 14px;
+}
+
+.login-form .welcome-text {
+    color: #010045; 
+}
+
+.login-form .admin-text {
+    color: #035C96;
+}
+
+.title-line {
+    border: none;
+    background: linear-gradient(to right, #010045, #035C96); 
+    height: 2px; 
+    width: 50%; 
+    margin: 10px auto; 
+}
+
+</style>
+</head>
+<body>
+
+<div class="header">
+  <img src="pics/malolos-logo.png" alt="Logo">
+  <div class="text-container">
+    <span class="logo-text">Republika ng Pilipinas</span>
+    <span class="country-text">Pamahalaang Lungsod ng Malolos</span> 
+  </div>
+</div>
+  
+<div class="login-panel">
+  <div class="carousel-container">
+    <div class="carousel-slide">
+      <img src="pics/slide1.png" alt="Slide 1">
+    </div>
+    <div class="carousel-slide">
+      <img src="pics/slide2.png" alt="Slide 2">
+    </div>
+    <div class="carousel-slide">
+      <img src="pics/slide3.png" alt="Slide 3">
+    </div>
+  </div>
+  
+  <div class="login-form">
+    <img src="pics/bangketicket.png" alt="Your Logo" style="width: 350px; height: 70px; margin-bottom: 0px; margin-right: -50px;">
+    <h2 class="login-title"><span class="welcome-text">Welcome</span> <span class="admin-text">Admin!</span></h2>
+    <hr class="title-line">
+    <form id="loginForm" onsubmit="return login()" action="#" method="post">
+        <label for="username">Admin ID</label>
+        <input type="text" id="username" name="username" placeholder="Enter your ID" required>
+
+        <label for="password">Password</label>
+        <div style="position: relative;">
+            <input type="password" id="password" name="password" placeholder="Enter your password" required>
+            <i class="fas fa-eye password-toggle" onclick="togglePasswordVisibility('password')"></i>
+        </div>
+
+        <button type="submit" class="login-button">Login</button>
+    </form>
+    <br>
+    <a href="forgotpass.html" class="forgot-password">Forgot Password?</a>
+  </div>
+</div>
+
+<!-- Forgot Password Form -->
+]
+
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/slick-carousel/1.8.1/slick.min.js"></script>
+<script>
+  function togglePasswordVisibility(inputId) {
+    const passwordInput = document.getElementById(inputId);
+    if (passwordInput.type === "password") {
+      passwordInput.type = "text";
+    } else {
+      passwordInput.type = "password";
+    }
+  }
+
+  function login() {
+    // Get input values
+    var username = document.getElementById("username").value;
+    var password = document.getElementById("password").value;
+
+    // Check if username and password match the default admin account
+    if (username === "020569" && password === "aer0205") {
+      // Redirect to specific page
+      window.location.href = "dashboard.html";
+      return false; // Prevent form submission
+    } else {
+      // Handle incorrect login (optional)
+        // Display custom error message
+        alert("Incorrect ID or password. Please try again.");
+      return false; // Prevent form submission
+    }
+  }
+
+  // Initialize Slick Carousel
+  $('.carousel-container').slick({
+    slidesToShow: 1,
+    slidesToScroll: 1,
+    autoplay: true,
+    autoplaySpeed: 2000,
+    arrows: false,
+    dots: true
+  });
+</script>
+
+</body>
+</html>
