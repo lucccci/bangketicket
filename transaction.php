@@ -399,15 +399,17 @@ if (!empty($filter_type) && !empty($filter_value)) {
 $totalRowsResult = $conn->query($sql);
 $totalRows = $totalRowsResult->num_rows;
 
-// Fetch all collectors from the database for the dropdown menu
+// Fetch collectors who have transactions today
 $collectorQuery = "SELECT DISTINCT c.collector_id, c.fname, c.lname 
                    FROM vendor_transaction t
-                   JOIN collectors c ON t.collector_id = c.collector_id";
+                   JOIN collectors c ON t.collector_id = c.collector_id
+                   WHERE DATE(t.date) = CURDATE()"; // Only select collectors with transactions today
 $collectorResult = $conn->query($collectorQuery);
 
 if (!$collectorResult) {
     die("Error fetching collectors: " . $conn->error);
 }
+
 // Set a default value for rows per page
 $rowsPerPage = 6; // Number of records to show per page
 
@@ -529,9 +531,9 @@ $totalAmount = $totalAmountRow['totalAmount'] ? $totalAmountRow['totalAmount'] :
 
 <!-- Report Dropdown Menu -->
 <div id="report-dropdown" class="report-dropdown-menu">
-    <button onclick="location.href='generate_report.php?report_type=by_date'">By Date</button>
+    <button onclick="location.href='generate_report_transaction.php?report_type=by_date'">By Date</button>
     <button onclick="toggleCollectorDropdown()">By Collector</button>
-    <button onclick="location.href='generate_report.php?report_type=summary_per_day'">Summary Per Day</button>
+    <button onclick="location.href='generate_report_transaction.php?report_type=summary_per_day'">Summary Per Day</button>
     <button onclick="toggleReportDropdown()">Cancel</button>
 </div>
 
@@ -541,7 +543,7 @@ $totalAmount = $totalAmountRow['totalAmount'] ? $totalAmountRow['totalAmount'] :
     if ($collectorResult->num_rows > 0) {
         while ($collectorRow = $collectorResult->fetch_assoc()) {
             $collectorName = "{$collectorRow['fname']} {$collectorRow['lname']}";
-            echo "<button onclick=\"location.href='generate_report.php?report_type=by_collector&collector_id={$collectorRow['collector_id']}'\">$collectorName</button>";
+            echo "<button onclick=\"location.href='generate_report_transaction.php?report_type=by_collector&collector_id={$collectorRow['collector_id']}'\">$collectorName</button>";
         }
     } else {
         echo "<button disabled>No collectors available</button>";

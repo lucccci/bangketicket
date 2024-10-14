@@ -410,8 +410,8 @@ $collectorResult = $conn->query($collectorQuery);
 <!-- Report Dropdown Menu -->
 <div id="report-dropdown" class="report-menu">
     <button onclick="toggleCollectorDropdown()">By Collector</button>
-    <button onclick="location.href='generate_report.php?report_type=by_vendor'">By Vendor</button>
-    <button onclick="location.href='generate_report.php?report_type=transaction_summary'">Transactions Summary</button>
+    <button onclick="location.href='generate_report_collection.php?report_type=by_vendor'">By Vendor</button>
+    <button onclick="location.href='generate_report_collection.php?report_type=transaction_summary'">Transactions Summary</button>
     <button onclick="toggleReportDropdown()">Cancel</button>
 </div>
 
@@ -421,7 +421,7 @@ $collectorResult = $conn->query($collectorQuery);
     if ($collectorResult->num_rows > 0) {
         while ($collectorRow = $collectorResult->fetch_assoc()) {
             $collectorName = "{$collectorRow['fname']} {$collectorRow['lname']}";
-            echo "<button onclick=\"location.href='generate_report.php?report_type=by_collector&collector_id={$collectorRow['collector_id']}'\">$collectorName</button>";
+            echo "<button onclick=\"location.href='generate_report_collection.php?report_type=by_collector&collector_id={$collectorRow['collector_id']}'\">$collectorName</button>";
         }
     } else {
         echo "<button disabled>No collectors available</button>";
