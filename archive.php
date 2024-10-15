@@ -17,6 +17,28 @@ if ($result->num_rows > 0) {
 } else {
     $archive_vendors = array(); // Empty array if no archived vendors found
 }
+// Pagination setup
+$rowsPerPage = 6; // Define the number of records per page
+$currentPage = isset($_GET['page']) ? (int)$_GET['page'] : 1;
+$currentPage = max(1, $currentPage); // Ensure current page is at least 1
+
+// Fetch total number of collectors for pagination calculation
+$totalRowsResult = $conn->query("SELECT COUNT(*) as total FROM archive_vendors");
+if ($totalRowsResult) {
+    $totalRows = $totalRowsResult->fetch_assoc()['total'];
+    $totalPages = ceil($totalRows / $rowsPerPage); // Calculate total pages
+} else {
+    $totalRows = 0; // Fallback in case of failure
+    $totalPages = 1; // Default to at least one page
+}
+
+// Calculate the starting index for the current page
+$startIndex = ($currentPage - 1) * $rowsPerPage;
+$startIndex = max(0, $startIndex); // Ensure the start index is not negative
+
+// Fetch the collectors for the current page with LIMIT
+$archivedVendorsResult = $conn->query("SELECT * FROM archive_vendors ORDER BY vendorID ASC LIMIT $startIndex, $rowsPerPage");
+
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -39,67 +61,99 @@ if ($result->num_rows > 0) {
             font-family: 'poppins', sans-serif;
         }
         
-       /* Sidebar */
-.side-menu {
-    width: 260px;
-    height: 100vh;
-    background-color: #fff;
-    color: #031F4E;
-    position: fixed;
-    top: 0;
-    left: 0;
-    z-index: 1000;
-    overflow-y: auto;
-    overflow-x:hidden;
-    transition: width 0.3s;
-    padding: 2px;
-}
+        /* Sidebar */
+        .side-menu {
+            width: 260px;
+            height: 100vh;
+            background-color: #fff;
+            color: #031F4E;
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: 1000;
+            overflow-y: auto;
+            overflow-x:hidden;
+            transition: width 0.3s;
+            padding: 2px;
+        }
 
-.side-menu .logo {
-    text-align: center;
-    padding: 20px;
-}
+        .side-menu .logo {
+            text-align: center;
+            padding: 20px;
+        }
 
-.side-menu .logo img {
-    max-width: 100%;
-    height: auto;
-}
+        .side-menu .logo img {
+            max-width: 100%;
+            height: auto;
+        }
 
-.side-menu a {
-    display: flex;
-    align-items: center;
-    padding: 15px 20px;
-    color: #031F4E;
-    text-decoration: none;
-    transition: background 0.3s ease, color 0.3s ease, transform 0.2s ease-in-out; /* Smooth transitions for hover */
-}
+        .side-menu a {
+            display: flex;
+            align-items: center;
+            padding: 15px 20px;
+            color: #031F4E;
+            text-decoration: none;
+            transition: background 0.3s ease, color 0.3s ease, transform 0.2s ease-in-out; /* Smooth transitions for hover */
+        }
 
-.side-menu a:hover {
-    background-color: #2A416F;
-    color: #fff;
-    
-}
-
-
-.side-menu a i {
-    margin-right: 10px;
-}
-
-.side-menu a.active {
-    background-color: #031F4E;
-    color: #fff;
-}
-
-.side-menu a.active i {
-    color: #fff;
-}
-
-.side-menu a:hover:not(.active) {
-    background-color: #2A416F;
-    color: #fff;
-}
+        .side-menu a:hover {
+            background-color: #2A416F;
+            color: #fff;
+            
+        }
 
 
+        .side-menu a i {
+            margin-right: 10px;
+        }
+
+        .side-menu a.active {
+            background-color: #031F4E;
+            color: #fff;
+        }
+
+        .side-menu a.active i {
+            color: #fff;
+        }
+
+        .side-menu a:hover:not(.active) {
+            background-color: #2A416F;
+            color: #fff;
+        }
+
+        /* Pagination styles */
+        .pagination {
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            margin-top: 10px;
+            padding-right: 10px;
+            width: 100%;
+        }
+
+
+        .pagination-button {
+            text-decoration: none;
+            padding: 8px 12px;
+            margin: 0 5px;
+            border: 1px solid #031F4E;
+            background-color: transparent;
+            color: #031F4E;
+            cursor: pointer;
+            border-radius: 4px;
+            transition: background 0.3s, color 0.3s;
+        }
+
+        .pagination-button.active {
+            background-color: #031F4E;
+            color: white;
+            border-color: #031F4E;
+        }
+
+        .pagination-button:hover {
+            background-color: #2A416F;
+            color: white;
+        }
 .logout {
             color: #e74c3c; /* Log Out link color */
             padding: 15px 20px; /* Padding for Log Out link */
@@ -595,8 +649,6 @@ if ($result->num_rows > 0) {
             <option value="">Select Filter</option>
             <option value="vendorID">Vendor ID</option>
             <option value="lname">Last Name</option>
-            <option value="paid">Paid</option>
-            <option value="unpaid">Unpaid</option>
         </select>
         <input type="text" id="filterInput" placeholder="Enter filter value">
         <button class="search-button" onclick="filterTable()">
@@ -618,7 +670,6 @@ if ($result->num_rows > 0) {
             <th>Middle Name</th>
             <th>Last Name</th>
             <th>Suffix</th> <!-- Add Suffix column -->
-            <th>Status</th> <!-- Add Status column -->
             <th>Contact #</th>
             <th></th>
             <th>Action</th>
@@ -631,7 +682,7 @@ if ($result->num_rows > 0) {
             </tr>
         <?php else : ?>
             <?php foreach ($archive_vendors as $vendor) : ?>
-                <tr class="vendor-row">
+                <tr class="vendor-row" data-vendor-id="<?php echo htmlspecialchars($vendor['vendorID']); ?>">
                     <td>
                         <button class="expand-collapse-btn" onclick="toggleDetails(this)">
                             <i class="fas fa-chevron-right"></i>
@@ -642,7 +693,6 @@ if ($result->num_rows > 0) {
                     <td><?php echo htmlspecialchars($vendor['mname']); ?></td>
                     <td><?php echo htmlspecialchars($vendor['lname']); ?></td>
                     <td><?php echo htmlspecialchars($vendor['suffix']); ?></td> <!-- Display Suffix -->
-                    <td></td>
                     <td><?php echo htmlspecialchars($vendor['contactNo']); ?></td>
                     <td><td>
                         <button class="action-view" onclick="openQRModal('<?php echo htmlspecialchars($vendor['vendorID']); ?>')">View QR</button>
@@ -672,6 +722,32 @@ if ($result->num_rows > 0) {
             <?php endforeach; ?>
         <?php endif; ?>
     </tbody>
+    <tfoot>
+            <tr>
+                <td colspan="10">
+                <hr>
+                    <div class="pagination">
+                        <?php if ($totalPages > 1 || $totalRows > 0): ?>
+                            <?php if ($currentPage > 1): ?>
+                                <a href="?page=<?php echo $currentPage - 1; ?>" class="pagination-button">Previous</a>
+                            <?php endif; ?>
+
+                            <?php
+                            $startPage = max(1, $currentPage - 2);
+                            $endPage = min($totalPages, $currentPage + 2);
+
+                            for ($i = $startPage; $i <= $endPage; $i++): ?>
+                                <button class="pagination-button <?php echo ($i === $currentPage) ? 'active' : ''; ?>" onclick="window.location.href='?page=<?php echo $i; ?>'"><?php echo $i; ?></button>
+                            <?php endfor; ?>
+
+                            <?php if ($currentPage < $totalPages): ?>
+                                <a href="?page=<?php echo $currentPage + 1; ?>" class="pagination-button">Next</a>
+                            <?php endif; ?>
+                        <?php endif; ?>
+                    </div>
+                </td>
+            </tr>
+        </tfoot>
 </table>
 
 
@@ -709,17 +785,12 @@ if ($result->num_rows > 0) {
             isVisible = cells[0].textContent.toLowerCase().includes(filterValue);
         } else if (filterType === "lname" && cells[3]) { // Check last name (fourth column)
             isVisible = cells[3].textContent.toLowerCase().includes(filterValue);
-        } else if (filterType === "paid" && cells[5]) { // Check Paid status (adjust as needed)
-            isVisible = cells[5].textContent.toLowerCase() === 'paid';
-        } else if (filterType === "unpaid" && cells[5]) { // Check Unpaid status (adjust as needed)
-            isVisible = cells[5].textContent.toLowerCase() === 'unpaid';
-        }
+        } 
 
         // Show or hide the row based on the filter match
         rows[i].style.display = isVisible ? "" : "none";
     }
 }
-
 
 function restoreVendor(vendorID) {
     if (confirm('Are you sure you want to restore this vendor?')) {
@@ -727,17 +798,36 @@ function restoreVendor(vendorID) {
             url: 'restore_vendor.php',
             type: 'POST',
             data: { vendorID: vendorID },
-            success: function () {
-                // Remove the vendor's row from the archive table
-                const row = document.querySelector(`.vendor-row[data-vendor-id='${vendorID}']`);
-                if (row) {
-                    row.remove(); // Remove the row from the table
-                }
+            success: function (response) {
+                if (response.trim() === 'success') {
+                    // Select and remove the vendor row and the details row
+                    const vendorRow = document.querySelector(`tr.vendor-row[data-vendor-id='${vendorID}']`);
+                    const detailsRow = document.getElementById('details-' + vendorID);
 
-                // Remove the hidden details row if it exists
-                const detailsRow = document.getElementById('details-' + vendorID);
-                if (detailsRow) {
-                    detailsRow.remove(); // Remove the details row from the table
+                    if (vendorRow) {
+                        vendorRow.remove(); // Remove the main vendor row from the table
+                    }
+
+                    if (detailsRow) {
+                        detailsRow.remove(); // Remove the additional details row from the table
+                    }
+
+                    // Check if there are any remaining rows (except the table header and footer)
+                    const remainingRows = document.querySelectorAll('.usersTable tbody tr.vendor-row');
+                    if (remainingRows.length === 0) {
+                        // If no more rows are left, display the "No records found" message
+                        const tbody = document.querySelector('.usersTable tbody');
+                        tbody.innerHTML = `
+                            <tr>
+                                <td colspan="9" style="text-align: left;">No records found</td>
+                            </tr>
+                        `;
+                    }
+
+                    alert('Vendor restored successfully.');
+                } else {
+                    // Handle failure (display the error message from PHP)
+                    alert('Error: ' + response);
                 }
             },
             error: function (xhr, status, error) {
@@ -746,7 +836,7 @@ function restoreVendor(vendorID) {
             }
         });
     }
-}
+}   
 
 function exportToCSV() {
     window.location.href = 'export_csv.php';

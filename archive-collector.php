@@ -22,6 +22,28 @@ if (!$result) {
     die("Query failed: " . $conn->error);
 }
 
+// Pagination setup
+$rowsPerPage = 6; // Define the number of records per page
+$currentPage = isset($_GET['page']) ? (int)$_GET['page'] : 1;
+$currentPage = max(1, $currentPage); // Ensure current page is at least 1
+
+// Fetch total number of collectors for pagination calculation
+$totalRowsResult = $conn->query("SELECT COUNT(*) as total FROM archive_collectors");
+if ($totalRowsResult) {
+    $totalRows = $totalRowsResult->fetch_assoc()['total'];
+    $totalPages = ceil($totalRows / $rowsPerPage); // Calculate total pages
+} else {
+    $totalRows = 0; // Fallback in case of failure
+    $totalPages = 1; // Default to at least one page
+}
+
+// Calculate the starting index for the current page
+$startIndex = ($currentPage - 1) * $rowsPerPage;
+$startIndex = max(0, $startIndex); // Ensure the start index is not negative
+
+// Fetch the collectors for the current page with LIMIT
+$archivedCollectorsResult = $conn->query("SELECT * FROM archive_collectors ORDER BY collector_id ASC LIMIT $startIndex, $rowsPerPage");
+
 ?>
 
 <!DOCTYPE html>
@@ -98,6 +120,39 @@ if (!$result) {
     color: #fff;
 }
 
+        /* Pagination styles */
+        .pagination {
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            margin-top: 10px;
+            padding-right: 10px;
+            width: 100%;
+        }
+
+
+        .pagination-button {
+            text-decoration: none;
+            padding: 8px 12px;
+            margin: 0 5px;
+            border: 1px solid #031F4E;
+            background-color: transparent;
+            color: #031F4E;
+            cursor: pointer;
+            border-radius: 4px;
+            transition: background 0.3s, color 0.3s;
+        }
+
+        .pagination-button.active {
+            background-color: #031F4E;
+            color: white;
+            border-color: #031F4E;
+        }
+
+        .pagination-button:hover {
+            background-color: #2A416F;
+            color: white;
+        }
 
 .logout {
             color: #e74c3c; /* Log Out link color */
@@ -263,7 +318,7 @@ if (!$result) {
     </div>
 
     <a href="collector.php"><i class="fa fa-user-circle"></i> Collector</a>
-    <a href="#"><i class="fa fa-table"></i> Collection</a>
+    <a href="collection.php"><i class="fa fa-table"></i> Collection</a>
     <a href="archive.php" class="active"><i class="fas fa-archive"></i> Archive</a>
 
       <!-- Log Out Link -->
@@ -314,6 +369,32 @@ if (!$result) {
             }
             ?>
             </tbody>
+            <tfoot>
+            <tr>
+                <td colspan="10">
+                <hr>
+                    <div class="pagination">
+                        <?php if ($totalPages > 1 || $totalRows > 0): ?>
+                            <?php if ($currentPage > 1): ?>
+                                <a href="?page=<?php echo $currentPage - 1; ?>" class="pagination-button">Previous</a>
+                            <?php endif; ?>
+
+                            <?php
+                            $startPage = max(1, $currentPage - 2);
+                            $endPage = min($totalPages, $currentPage + 2);
+
+                            for ($i = $startPage; $i <= $endPage; $i++): ?>
+                                <button class="pagination-button <?php echo ($i === $currentPage) ? 'active' : ''; ?>" onclick="window.location.href='?page=<?php echo $i; ?>'"><?php echo $i; ?></button>
+                            <?php endfor; ?>
+
+                            <?php if ($currentPage < $totalPages): ?>
+                                <a href="?page=<?php echo $currentPage + 1; ?>" class="pagination-button">Next</a>
+                            <?php endif; ?>
+                        <?php endif; ?>
+                    </div>
+                </td>
+            </tr>
+        </tfoot>
         </table>
     </div>
 </div>

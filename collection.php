@@ -17,6 +17,13 @@ if ($conn->connect_error) {
 $filter_type = isset($_POST['filter_type']) ? $_POST['filter_type'] : '';
 $filter_value = isset($_POST['filter_value']) ? $_POST['filter_value'] : '';
 
+// Pagination setup
+$rowsPerPage = 8; // Number of records per page (Set to 8)
+$currentPage = isset($_GET['page']) ? (int)$_GET['page'] : 1;
+$currentPage = max(1, $currentPage); // Ensure current page is at least 1
+$startIndex = ($currentPage - 1) * $rowsPerPage;
+$startIndex = max(0, $startIndex); // Ensure start index is not negative
+
 // Prepare the base query without LIMIT and ORDER BY first
 $sql = "SELECT vt.transactionID, vt.vendorID, 
                CONCAT(vl.fname, ' ', vl.mname, ' ', vl.lname) AS vendor_name, 
@@ -32,15 +39,22 @@ if (!empty($filter_type) && !empty($filter_value)) {
         $sql .= " WHERE (vl.fname LIKE '%$filter_value%' OR vl.mname LIKE '%$filter_value%' OR vl.lname LIKE '%$filter_value%')";
     } else if ($filter_type == 'collector_id') {
         $sql .= " WHERE vt.collector_id LIKE '%$filter_value%'";
-    }else if ($filter_type == 'date') {
+    } else if ($filter_type == 'date') {
         // Convert the user-friendly date to 'Y-m-d' format for the SQL query
         $formattedDate = date('Y-m-d', strtotime($filter_value));
         $sql .= " WHERE DATE(vt.date) = '$formattedDate'";
     }
 }
 
-$sql .= " ORDER BY vt.transactionID ASC";
+$sql .= " ORDER BY vt.transactionID ASC LIMIT $startIndex, $rowsPerPage";
 $result = $conn->query($sql);
+
+// Fetch total number of transactions for pagination calculation
+$totalRowsResult = $conn->query("SELECT COUNT(*) as total 
+                                FROM vendor_transaction vt
+                                JOIN vendor_list vl ON vt.vendorID = vl.vendorID");
+$totalRows = $totalRowsResult->fetch_assoc()['total'];
+$totalPages = ceil($totalRows / $rowsPerPage);
 
 // Fetch all collectors for report generation dropdown
 $collectorQuery = "SELECT DISTINCT c.collector_id, c.fname, c.lname 
@@ -267,6 +281,40 @@ $collectorResult = $conn->query($collectorQuery);
             justify-content: center;
         }
 
+        /* Pagination styles */
+        .pagination {
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            margin-top: 10px;
+            padding-right: 10px;
+            width: 100%;
+        }
+
+
+        .pagination-button {
+            text-decoration: none;
+            padding: 8px 12px;
+            margin: 0 5px;
+            border: 1px solid #031F4E;
+            background-color: transparent;
+            color: #031F4E;
+            cursor: pointer;
+            border-radius: 4px;
+            transition: background 0.3s, color 0.3s;
+        }
+
+        .pagination-button.active {
+            background-color: #031F4E;
+            color: white;
+            border-color: #031F4E;
+        }
+
+        .pagination-button:hover {
+            background-color: #2A416F;
+            color: white;
+        }
+
         /* Dropdown styles */
         .dropdown-menu {
             display: none;
@@ -458,6 +506,32 @@ $collectorResult = $conn->query($collectorQuery);
             }
             ?>
             </tbody>
+            <tfoot>
+            <tr>
+                <td colspan="9">
+                <hr>
+                    <div class="pagination">
+                        <?php if ($totalPages > 1 || $totalRows > 0): ?>
+                            <?php if ($currentPage > 1): ?>
+                                <a href="?page=<?php echo $currentPage - 1; ?>" class="pagination-button">Previous</a>
+                            <?php endif; ?>
+
+                            <?php
+                            $startPage = max(1, $currentPage - 2);
+                            $endPage = min($totalPages, $currentPage + 2);
+
+                            for ($i = $startPage; $i <= $endPage; $i++): ?>
+                                <button class="pagination-button <?php echo ($i === $currentPage) ? 'active' : ''; ?>" onclick="window.location.href='?page=<?php echo $i; ?>'"><?php echo $i; ?></button>
+                            <?php endfor; ?>
+
+                            <?php if ($currentPage < $totalPages): ?>
+                                <a href="?page=<?php echo $currentPage + 1; ?>" class="pagination-button">Next</a>
+                            <?php endif; ?>
+                        <?php endif; ?>
+                    </div>
+                </td>
+            </tr>
+        </tfoot>
         </table>
     </div>
 </div>

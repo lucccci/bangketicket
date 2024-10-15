@@ -27,6 +27,7 @@ $totalPages = ceil($totalRows / $rowsPerPage);
 $startIndex = ($currentPage - 1) * $rowsPerPage;
 $startIndex = max(0, $startIndex); // Ensure start index is not negative
 
+
 // Fetch vendors with their status (Paid or Unpaid) based on today's transactions
 $sql = "SELECT vendor_list.*, 
         CASE 
@@ -37,8 +38,10 @@ $sql = "SELECT vendor_list.*,
         LEFT JOIN vendor_transaction 
         ON vendor_list.vendorID = vendor_transaction.vendorID
         AND DATE(vendor_transaction.date) = CURDATE() -- Only consider today's transactions
+        WHERE vendor_list.archived_at IS NULL -- Exclude archived vendors
         GROUP BY vendor_list.vendorID
         LIMIT $startIndex, $rowsPerPage";
+
 $result = $conn->query($sql);
 
 
@@ -49,13 +52,12 @@ if ($result->num_rows > 0) {
     $cust = array(); 
 }
 
-// Handle POST requests for editing or deleting vendors
+// Handle POST requests for archiving vendors
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
-    // Check if the delete form was submitted
     if (isset($_POST['cust_id_to_delete'])) {
         $cust_id_to_delete = sanitizeInput($_POST['cust_id_to_delete']);
 
-        // Fetch vendor data to be moved to the archived table
+        // Fetch vendor data to move the QR image to the archive folder
         $select_sql = "SELECT * FROM vendor_list WHERE vendorID=?";
         $stmt = $conn->prepare($select_sql);
         $stmt->bind_param("s", $cust_id_to_delete);
@@ -66,87 +68,64 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             $vendor_data = $result->fetch_assoc();
             $old_qrimage = $vendor_data['qrimage'];
 
-            // Ensure archive path exists
+            // Ensure the archive directory exists
             if (!is_dir($archivePath)) {
-                mkdir($archivePath, 0777, true); // Create the directory with the appropriate permissions
+                mkdir($archivePath, 0777, true);
             }
 
-            // Delete all transactions of this vendor first
-            $delete_transactions_sql = "DELETE FROM vendor_transaction WHERE vendorID=?";
-            $stmt = $conn->prepare($delete_transactions_sql);
+            // Archive the vendor's QR image
+            if ($old_qrimage && file_exists($path . $old_qrimage)) {
+                $new_qrimage_path = $archivePath . $old_qrimage;
+                rename($path . $old_qrimage, $new_qrimage_path); // Move the file
+            }
+
+            // Update the vendor's archived_at field in the vendor_list table
+            $update_sql = "UPDATE vendor_list SET archived_at=NOW() WHERE vendorID=?";
+            $stmt = $conn->prepare($update_sql);
             $stmt->bind_param("s", $cust_id_to_delete);
             $stmt->execute();
 
-            if ($stmt->affected_rows >= 0) {
-                // Archive the vendor's QR image
-                if ($old_qrimage && file_exists($path . $old_qrimage)) {
-                    $new_qrimage_path = $archivePath . $old_qrimage;
-                    if (rename($path . $old_qrimage, $new_qrimage_path)) {
-                        // Insert vendor data into archive_vendors table
-                        $insert_sql = "INSERT INTO archive_vendors (vendorID, fName, mname, lName, suffix, gender, birthday, age, contactNo, province, municipality, barangay, houseNo, streetname, qrimage) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
-                        $stmt = $conn->prepare($insert_sql);
-                        if ($stmt === false) {
-                            echo "<script>alert('Error preparing insert statement: " . $conn->error . "');</script>";
-                            exit();
-                        }
-                        $stmt->bind_param("ssssssissssssss", $vendor_data['vendorID'], $vendor_data['fname'], $vendor_data['mname'], $vendor_data['lname'], $vendor_data['suffix'], $vendor_data['gender'], $vendor_data['birthday'], $vendor_data['age'], $vendor_data['contactNo'], $vendor_data['province'], $vendor_data['municipality'], $vendor_data['barangay'], $vendor_data['houseNo'], $vendor_data['streetname'], $old_qrimage);
-                        $stmt->execute();
+            if ($stmt->affected_rows > 0) {
+                // Insert the archived vendor data, including the QR image, into the archive_vendors table
+                $insert_sql = "INSERT INTO archive_vendors (vendorID, fname, mname, lname, suffix, gender, birthday, age, contactNo, province, municipality, barangay, houseNo, streetname, qrimage) 
+                               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                $stmt = $conn->prepare($insert_sql);
+                $stmt->bind_param("ssssssissssssss", 
+                    $vendor_data['vendorID'], 
+                    $vendor_data['fname'], 
+                    $vendor_data['mname'], 
+                    $vendor_data['lname'], 
+                    $vendor_data['suffix'], 
+                    $vendor_data['gender'], 
+                    $vendor_data['birthday'], 
+                    $vendor_data['age'], 
+                    $vendor_data['contactNo'], 
+                    $vendor_data['province'], 
+                    $vendor_data['municipality'], 
+                    $vendor_data['barangay'], 
+                    $vendor_data['houseNo'], 
+                    $vendor_data['streetname'], 
+                    $old_qrimage // Include the archived QR image
+                );
+                $stmt->execute();
 
-                        if ($stmt->affected_rows > 0) {
-                            // Delete vendor from vendor_list table
-                            $delete_sql = "DELETE FROM vendor_list WHERE vendorID=?";
-                            $stmt = $conn->prepare($delete_sql);
-                            if ($stmt === false) {
-                                echo "<script>alert('Error preparing delete statement: " . $conn->error . "');</script>";
-                                exit();
-                            }
-                            $stmt->bind_param("s", $cust_id_to_delete);
-                            $stmt->execute();
-
-                            if ($stmt->affected_rows > 0) {
-                                echo "<script>alert('Vendor moved to archive successfully.');</script>";
-                                header("Location: {$_SERVER['PHP_SELF']}");
-                                exit();
-                            } else {
-                                echo "<script>alert('Error deleting vendor from vendor_list: " . $conn->error . "');</script>";
-                            }
-                        } else {
-                            echo "<script>alert('Error inserting vendor into archive_vendors: " . $conn->error . "');</script>";
-                        }
-                    } else {
-                        echo "<script>alert('Error moving QR code file to archive.');</script>";
-                    }
+                if ($stmt->affected_rows > 0) {
+                    echo "<script>alert('Vendor archived successfully.');</script>";
+                    header("Location: {$_SERVER['PHP_SELF']}");
+                    exit();
                 } else {
-                    echo "<script>alert('QR image not found. Archiving vendor details without the image.');</script>";
-                    $insert_sql = "INSERT INTO archive_vendors (vendorID, fName, mname, lName, suffix, gender, birthday, age, contactNo, province, municipality, barangay, houseNo, streetname, qrimage) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
-                    $stmt = $conn->prepare($insert_sql);
-                    $stmt->bind_param("ssssssissssssss", $vendor_data['vendorID'], $vendor_data['fname'], $vendor_data['mname'], $vendor_data['lname'], $vendor_data['suffix'], $vendor_data['gender'], $vendor_data['birthday'], $vendor_data['age'], $vendor_data['contactNo'], $vendor_data['province'], $vendor_data['municipality'], $vendor_data['barangay'], $vendor_data['houseNo'], $vendor_data['streetname'], $vendor_data['qrimage']);
-                    $stmt->execute();
-
-                    if ($stmt->affected_rows > 0) {
-                        $delete_sql = "DELETE FROM vendor_list WHERE vendorID=?";
-                        $stmt = $conn->prepare($delete_sql);
-                        $stmt->bind_param("s", $cust_id_to_delete);
-                        $stmt->execute();
-
-                        if ($stmt->affected_rows > 0) {
-                            echo "<script>alert('Vendor moved to archive successfully.');</script>";
-                            header("Location: {$_SERVER['PHP_SELF']}");
-                            exit();
-                        } else {
-                            echo "<script>alert('Error deleting vendor from vendor_list: " . $conn->error . "');</script>";
-                        }
-                    } else {
-                        echo "<script>alert('Error inserting vendor into archive_vendors: " . $conn->error . "');</script>";
-                    }
+                    echo "<script>alert('Error archiving vendor: " . $conn->error . "');</script>";
                 }
             } else {
-                echo "<script>alert('Error deleting vendor transactions: " . $conn->error . "');</script>";
+                echo "<script>alert('Error updating vendor to archived status: " . $conn->error . "');</script>";
             }
         } else {
             echo "<script>alert('Vendor not found.');</script>";
         }
     }
+
+
+    
 
     // Check if the edit form was submitted
     if (isset($_POST['submit_edit'])) {
@@ -1218,11 +1197,26 @@ function updateBarangay() {
     overlay.style.display = overlay.style.display === "block" ? "none" : "block";
   }
 
-  function openEditModal(vendorID) {
+  // Close the modal when the close button (x) is clicked
+function closeEditModal() {
+    var editModal = document.getElementById("editModal");
+    editModal.style.display = "none";
+}
+
+// Close the modal when clicking outside of it
+window.onclick = function(event) {
+    var editModal = document.getElementById("editModal");
+    if (event.target == editModal) {
+        closeEditModal(); // Call the closeEditModal function
+    }
+};
+
+// Open the edit modal
+function openEditModal(vendorID) {
     var editModal = document.getElementById("editModal");
     editModal.style.display = "block";
 
-    // Fetch vendor data by ID and populate form fields
+    // Fetch vendor data by ID and populate form fields (existing logic)
     var xhr = new XMLHttpRequest();
     xhr.onreadystatechange = function () {
         if (xhr.readyState === XMLHttpRequest.DONE) {
@@ -1236,7 +1230,7 @@ function updateBarangay() {
                     return;
                 }
 
-                // Populate the form fields with the vendor information
+                // Populate the form fields with the vendor information (existing logic)
                 document.getElementById('edit_vendor_id').value = vendor.vendorID;
                 document.getElementById('edit_fName').value = vendor.fname;
                 document.getElementById('edit_mname').value = vendor.mname;
@@ -1266,6 +1260,11 @@ function updateBarangay() {
     xhr.send();
 }
 
+// Event listener for close button
+var closeModalBtn = document.querySelector('.close-modal');
+if (closeModalBtn) {
+    closeModalBtn.addEventListener('click', closeEditModal); // Ensure this calls the closeEditModal function
+}
 function openQRModal(vendorID) {
     var qrModalContent = document.getElementById("qrModalContent");
 
