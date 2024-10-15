@@ -28,6 +28,18 @@
             transition: width 0.3s;
             padding: 0px;
         }
+        /* Set a fixed height for the dropdown and enable internal scrolling */
+.dropdown-content {
+    display: none;
+    background-color: #fefcfc;
+    position: relative;
+    max-height: 150px; /* Set a fixed height for the dropdown */
+    overflow-y: auto; /* Enable internal scrolling if content exceeds the height */
+    padding-left: 20px; /* Keep padding to make it look nice */
+    padding-right: 20px;
+    border-left: 3px solid #031F4E;
+}
+
 
         .side-menu a {
             display: flex;
@@ -344,7 +356,6 @@
     <div class="dropdown">
         <a href="javascript:void(0);" class="active hovered"><i class="fas fa-users"></i> Vendors</a>
         <div class="dropdown-content" style="display: block;">
-            <a href="vendorform.php"><i class="fas fa-user-plus"></i> Add Vendors</a>
             <a href="vendorlist.php"><i class="fas fa-list"></i> Vendor List</a>
             <a href="transaction.php" class="active hovered"><i class="fas fa-dollar-sign"></i> Transactions</a>
         </div>

@@ -207,6 +207,17 @@ body {
     margin: 0; /* Remove default margin */
     overflow: auto; /* Prevent any scrolling */
 }
+/* Set a fixed height for the dropdown and enable internal scrolling */
+.dropdown-content {
+  display: none;
+  background-color: #fefcfc;
+  position: relative;
+  max-height: 150px; /* Set a fixed height for the dropdown */
+  overflow-y: auto; /* Enable internal scrolling if content exceeds the height */
+  padding-left: 20px; /* Keep padding to make it look nice */
+  padding-right: 20px;
+  border-left: 3px solid #031F4E;
+}
 
 /* Pagination styles */
 .pagination {
@@ -485,6 +496,7 @@ body {
   background-color: #2A416F;
   color: #fff;
 }
+
 
 
 

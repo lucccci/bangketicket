@@ -111,7 +111,18 @@ if (isset($_REQUEST['sbt-btn'])) {
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Add Vendor</title>
   <style>
-  
+  /* Set a fixed height for the dropdown and enable internal scrolling */
+.dropdown-content {
+  display: none;
+  background-color: #fefcfc;
+  position: relative;
+  max-height: 150px; /* Set a fixed height for the dropdown */
+  overflow-y: auto; /* Enable internal scrolling if content exceeds the height */
+  padding-left: 20px; /* Keep padding to make it look nice */
+  padding-right: 20px;
+  border-left: 3px solid #031F4E;
+}
+
   .logout {
     color: #e74c3c; /* Log Out link color */
     padding: 15px 20px; /* Padding for Log Out link */

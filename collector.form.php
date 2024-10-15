@@ -188,75 +188,84 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     }
 
     /* Sidebar */
-    /* Sidebar */
+/* Sidebar */
 .side-menu {
-    font-family: 'Poppins', sans-serif;
     width: 260px;
     height: 100vh;
     background-color: #fff;
     color: #031F4E;
-    position: fixed; /* Keep sidebar fixed */
+    position: fixed;
     top: 0;
     left: 0;
     z-index: 1000;
     overflow-y: auto;
+    transition: width 0.3s;
     padding: 2px;
+}
+
+.side-menu .logo {
+    text-align: center;
+    padding: 20px;
+}
+
+.side-menu .logo img {
+    max-width: 100%;
+    height: auto;
+}
+
+.side-menu a {
     display: flex;
-    flex-direction: column;
-    justify-content: space-between; /* Space between the items */
+    align-items: center;
+    padding: 15px 20px;
+    color: #031F4E;
+    text-decoration: none;
+    transition: background 0.3s, color 0.3s;
 }
 
-    .side-menu a {
-      display: flex;
-      align-items: center;
-      padding: 15px 20px;
-      color: #031F4E;
-      text-decoration: none;
-      transition: background 0.3s, color 0.3s;
-    }
-
-    .side-menu a.active {
-      background-color: #031F4E;
-      color: #fff;
-    }
-
-    .side-menu a:hover:not(.active) {
-      background-color: #2A416F;
-      color: #fff;
-    }
-
-    .dropdown-content {
-      display: none;
-      background-color: #f9f9f9;
-      box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
-    }
-
-    .dropdown.active .dropdown-content {
-      display: block;
-    }
-
-    .dropdown-content a {
-      padding: 10px 20px;
-      color: #031F4E;
-      text-decoration: none;
-    }
-
-    .dropdown-content a:hover {
-      background-color: #f1f1f1;
-    }
-    .logout {
-    color: #e74c3c; /* Log Out link color */
-    padding: 15px 20px; /* Padding for Log Out link */
-    margin-top: 99px; /* Add space above Log Out link */
-    display: flex; /* Ensure the icon and text align properly */
-    align-items: center; /* Center align the icon and text vertically */
-    transition: background 0.3s, color 0.3s; /* Transition effects */
+.side-menu a i {
+    margin-right: 10px;
 }
 
-.logout:hover {
-    background-color: #c0392b; /* Hover effect for Log Out link */
-    color: #fff; /* Change text color on hover */
+.side-menu a.active {
+    background-color: #031F4E;
+    color: #fff;
 }
+
+.side-menu a.active i {
+    color: #fff;
+}
+
+.side-menu a:hover:not(.active) {
+    background-color: #2A416F;
+    color: #fff;
+}
+
+
+.logout {
+            color: #e74c3c; /* Log Out link color */
+            padding: 15px 20px; /* Padding for Log Out link */
+            margin-top: 215px; /* Add space above Log Out link */
+            display: flex; /* Ensure the icon and text align properly */
+            align-items: center; /* Center align the icon and text vertically */
+            transition: background 0.3s, color 0.3s; /* Transition effects */
+        }
+
+        .logout:hover {
+            background-color: #c0392b; /* Hover effect for Log Out link */
+            color: #fff; /* Change text color on hover */
+        }
+        /* Set a fixed height for the dropdown and enable internal scrolling */
+.dropdown-content {
+    display: none;
+    background-color: #fefcfc;
+    position: relative;
+    max-height: 150px; /* Set a fixed height for the dropdown */
+    overflow-y: auto; /* Enable internal scrolling if content exceeds the height */
+    padding-left: 20px; /* Keep padding to make it look nice */
+    padding-right: 20px;
+    border-left: 3px solid #031F4E;
+}
+
 
 
   </style>
@@ -284,31 +293,24 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 </head>
 <body>
 <div class="header-panel"></div>
-
-  <!-- Sidebar -->
-  <div id="sideMenu" class="side-menu">
-    <div class="logo">
-      <img src="pics/logo.png" alt="Logo">
-    </div>
-    <a href="dashboard.html"><i class="fas fa-chart-line"></i> Dashboard</a>
-    <a href="product.php"><i class="fas fa-box"></i> Product</a>
-
-    <div class="dropdown active">
-      <a href="#"><i class="fas fa-users"></i> Vendors</a>
-      <div class="dropdown-content">
-        <a href="vendorlist.php"><i class="fas fa-list"></i> Vendor List</a>
-        <a href="transaction.php"><i class="fas fa-dollar-sign"></i> Transactions</a>
-      </div>
-    </div>
-
-    <a href="collector.php" class="active"><i class="fa fa-user-circle"></i> Collector</a>
-    <a href="#"><i class="fa fa-table"></i> Collection</a>
-    <a href="archive.php"><i class="fas fa-archive"></i> Archive</a>
-
-        <!-- Log Out Link -->
-        <a href="index.html" class="logout"><i class="fas fa-sign-out-alt"></i> Log Out</a>
-
+<!-- Sidebar -->
+<div id="sideMenu" class="side-menu">
+  <div class="logo">
+    <img src="pics/logo.png" alt="Logo">
   </div>
+  <a href="dashboard.html"><i class="fas fa-chart-line"></i> Dashboard</a>
+  <a href="product.php"><i class="fas fa-box"></i> Product</a>
+
+  <!-- Changed Vendors dropdown to a direct link -->
+  <a href="vendorlist.php"><i class="fas fa-users"></i> Vendors</a>
+
+  <a href="collector.php" class="active"><i class="fa fa-user-circle"></i> Collector</a>
+  <a href="#"><i class="fa fa-table"></i> Collection</a>
+  <a href="archive.php"><i class="fas fa-archive"></i> Archive</a>
+
+  <!-- Log Out Link -->
+  <a href="index.html" class="logout"><i class="fas fa-sign-out-alt"></i> Log Out</a>
+</div>
 
   <div class="main-content">
     <div class="panel">
@@ -352,5 +354,12 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
       </form>
     </div>
 </div>
+<script>
+document.querySelector('.dropdown a').addEventListener('click', function(event) {
+  event.preventDefault();
+  this.parentElement.classList.toggle('active');
+});
+
+  </script>
 </body>
 </html>
