@@ -36,8 +36,6 @@ body {
     background-color: #F2F7FC;
     position: relative;
 }
-
-/* Sidebar */
 .side-menu {
     width: 260px;
     height: 100vh;
@@ -48,10 +46,20 @@ body {
     left: 0;
     z-index: 1000;
     overflow-y: auto;
+    overflow-x:hidden;
     transition: width 0.3s;
     padding: 2px;
 }
 
+.side-menu .logo {
+    text-align: center;
+    padding: 20px;
+}
+
+.side-menu .logo img {
+    max-width: 100%;
+    height: auto;
+}
 
 .side-menu a {
     display: flex;
@@ -59,7 +67,12 @@ body {
     padding: 15px 20px;
     color: #031F4E;
     text-decoration: none;
-    transition: background 0.3s, color 0.3s;
+    transition: background 0.3s ease, color 0.3s ease, transform 0.2s ease-in-out; /* Added smooth hover transitions */
+}
+.side-menu a:hover {
+    background-color: #2A416F;
+    color: #fff;
+    transform: translateX(10px); /* Adds smooth slide on hover */
 }
 
 .side-menu a i {
@@ -79,18 +92,32 @@ body {
     background-color: #2A416F;
     color: #fff;
 }
-.logout {
-    color: #e74c3c; /* Log Out link color */
-    padding: 15px 20px; /* Padding for Log Out link */
-    margin-top: 215px; /* Add space above Log Out link */
-    display: flex; /* Ensure the icon and text align properly */
-    align-items: center; /* Center align the icon and text vertically */
-    transition: background 0.3s, color 0.3s; /* Transition effects */
-}
 
-.logout:hover {
-    background-color: #c0392b; /* Hover effect for Log Out link */
-    color: #fff; /* Change text color on hover */
+
+.logout {
+            color: #e74c3c; /* Log Out link color */
+            padding: 15px 20px; /* Padding for Log Out link */
+            margin-top: 215px; /* Add space above Log Out link */
+            display: flex; /* Ensure the icon and text align properly */
+            align-items: center; /* Center align the icon and text vertically */
+            transition: background 0.3s, color 0.3s; /* Transition effects */
+        }
+
+        .logout:hover {
+    background-color: #c0392b;
+    color: #fff;
+    transform: translateX(10px); /* Slide effect on hover for logout */
+}
+        /* Set a fixed height for the dropdown and enable internal scrolling */
+.dropdown-content {
+    display: none;
+    background-color: #fefcfc;
+    position: relative;
+    max-height: 150px; /* Set a fixed height for the dropdown */
+    overflow-y: auto; /* Enable internal scrolling if content exceeds the height */
+    padding-left: 20px; /* Keep padding to make it look nice */
+    padding-right: 20px;
+    border-left: 3px solid #031F4E;
 }
 
 

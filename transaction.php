@@ -15,20 +15,7 @@
         }
 
         /* Sidebar */
-        .side-menu {
-            width: 260px;
-            height: 100vh;
-            background-color: #fff;
-            color: #031F4E;
-            position: fixed;
-            top: 0;
-            left: 0;
-            z-index: 1000;
-            overflow-y: auto;
-            transition: width 0.3s;
-            padding: 0px;
-        }
-        /* Set a fixed height for the dropdown and enable internal scrolling */
+  
 .dropdown-content {
     display: none;
     background-color: #fefcfc;
@@ -40,51 +27,81 @@
     border-left: 3px solid #031F4E;
 }
 
+/* Sidebar */
+.side-menu {
+  width: 260px;
+  height: 100vh;
+  background-color: #fff;
+  color: #031F4E;
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 1000;
+  overflow-y: hidden;
+  overflow-x:hidden;
+  transition: width 0.3s;
+  padding: 2px;
+}
 
-        .side-menu a {
-            display: flex;
-            align-items: center;
-            padding: 15px 20px;
-            color: #031F4E;
-            text-decoration: none;
-            transition: background 0.3s, color 0.3s;
-        }
+.side-menu .logo {
+  text-align: center;
+  padding: 20px;
+}
 
-        .side-menu a i {
-            margin-right: 10px;
-        }
+.side-menu .logo img {
+  max-width: 100%;
+  height: auto;
+}
 
-        .side-menu a.active, .side-menu a.hovered {
-            background-color: #031F4E;
-            color: #fff;
-        }
+.side-menu a {
+  display: flex;
+  align-items: center;
+  padding: 15px 20px;
+  color: #031F4E;
+  text-decoration: none;
+  transition: background 0.3s ease, color 0.3s ease, transform 0.2s ease-in-out; /* Smooth transitions for hover */
+}
 
-        .side-menu a:hover {
-            background-color: #2A416F;
+.side-menu a:hover {
+  background-color: #2A416F;
   color: #fff;
-        }
+  transform: translateX(10px); /* Slide to the right on hover */
+}
 
-        .menu-toggle {
-            position: absolute;
-            top: 20px;
-            left: 20px;
-            cursor: pointer;
-            font-size: 24px;
-            z-index: 1001;
-        }
-        .logout {
-            color: #e74c3c; /* Log Out link color */
-            padding: 15px 20px; /* Padding for Log Out link */
-            margin-top: 70px; /* Add space above Log Out link */
-            display: flex; /* Ensure the icon and text align properly */
-            align-items: center; /* Center align the icon and text vertically */
-            transition: background 0.3s, color 0.3s; /* Transition effects */
-        }
 
-        .logout:hover {
-            background-color: #c0392b; /* Hover effect for Log Out link */
-            color: #fff; /* Change text color on hover */
-        }
+.side-menu a i {
+  margin-right: 10px;
+}
+
+.side-menu a.active {
+  background-color: #031F4E;
+  color: #fff;
+}
+
+.side-menu a.active i {
+  color: #fff;
+}
+
+.side-menu a:hover:not(.active) {
+  background-color: #2A416F;
+  color: #fff;
+}
+
+
+.logout {
+          color: #e74c3c; /* Log Out link color */
+          padding: 15px 20px; /* Padding for Log Out link */
+          margin-top: 115px; /* Add space above Log Out link */
+          display: flex; /* Ensure the icon and text align properly */
+          align-items: center; /* Center align the icon and text vertically */
+          transition: background 0.3s, color 0.3s; /* Transition effects */
+      }
+
+      .logout:hover {
+  background-color: #c0392b;
+  color: #fff;
+  transform: translateX(10px); /* Slide effect on hover for logout */
+}
 
 
 

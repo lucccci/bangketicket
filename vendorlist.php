@@ -207,6 +207,82 @@ body {
     margin: 0; /* Remove default margin */
     overflow: auto; /* Prevent any scrolling */
 }
+
+/* Sidebar */
+.side-menu {
+  width: 260px;
+  height: 100vh;
+  background-color: #fff;
+  color: #031F4E;
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 1000;
+  overflow-y: auto;
+  overflow-x:hidden;
+  transition: width 0.3s;
+  padding: 2px;
+}
+
+.side-menu .logo {
+  text-align: center;
+  padding: 20px;
+}
+
+.side-menu .logo img {
+  max-width: 100%;
+  height: auto;
+}
+
+.side-menu a {
+  display: flex;
+  align-items: center;
+  padding: 15px 20px;
+  color: #031F4E;
+  text-decoration: none;
+  transition: background 0.3s ease, color 0.3s ease, transform 0.2s ease-in-out; /* Smooth transitions for hover */
+}
+
+.side-menu a:hover {
+  background-color: #2A416F;
+  color: #fff;
+  transform: translateX(10px); /* Slide to the right on hover */
+}
+
+
+.side-menu a i {
+  margin-right: 10px;
+}
+
+.side-menu a.active {
+  background-color: #031F4E;
+  color: #fff;
+}
+
+.side-menu a.active i {
+  color: #fff;
+}
+
+.side-menu a:hover:not(.active) {
+  background-color: #2A416F;
+  color: #fff;
+}
+
+
+.logout {
+          color: #e74c3c; /* Log Out link color */
+          padding: 15px 20px; /* Padding for Log Out link */
+          margin-top: 215px; /* Add space above Log Out link */
+          display: flex; /* Ensure the icon and text align properly */
+          align-items: center; /* Center align the icon and text vertically */
+          transition: background 0.3s, color 0.3s; /* Transition effects */
+      }
+
+      .logout:hover {
+  background-color: #c0392b;
+  color: #fff;
+  transform: translateX(10px); /* Slide effect on hover for logout */
+}
 /* Set a fixed height for the dropdown and enable internal scrolling */
 .dropdown-content {
   display: none;
@@ -806,7 +882,19 @@ body {
 </div>
 
   <script>
+// JavaScript for click animation
+const menuLinks = document.querySelectorAll('.side-menu a');
 
+menuLinks.forEach(link => {
+    link.addEventListener('click', function() {
+        this.style.transition = 'transform 0.1s ease-in-out';  // Apply scaling effect
+        this.style.transform = 'scale(0.95)';  // Shrink on click
+        
+        setTimeout(() => {
+            this.style.transform = 'scale(1)';  // Return to normal size after a short delay
+        }, 100);  // Delay to restore to normal size (in milliseconds)
+    });
+});
 function filterTable() {
     const filterType = document.getElementById("filterDropdown").value; // Get selected filter type
     const filterValue = document.getElementById("filterInput").value.toLowerCase(); // Get entered filter value

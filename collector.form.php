@@ -187,7 +187,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
       color: #666;
     }
 
-    /* Sidebar */
 /* Sidebar */
 .side-menu {
     width: 260px;
@@ -199,6 +198,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     left: 0;
     z-index: 1000;
     overflow-y: auto;
+    overflow-x:hidden;
     transition: width 0.3s;
     padding: 2px;
 }
@@ -219,8 +219,15 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     padding: 15px 20px;
     color: #031F4E;
     text-decoration: none;
-    transition: background 0.3s, color 0.3s;
+    transition: background 0.3s ease, color 0.3s ease, transform 0.2s ease-in-out; /* Smooth transitions for hover */
 }
+
+.side-menu a:hover {
+    background-color: #2A416F;
+    color: #fff;
+    transform: translateX(10px); /* Slide to the right on hover */
+}
+
 
 .side-menu a i {
     margin-right: 10px;
@@ -251,9 +258,10 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         }
 
         .logout:hover {
-            background-color: #c0392b; /* Hover effect for Log Out link */
-            color: #fff; /* Change text color on hover */
-        }
+    background-color: #c0392b;
+    color: #fff;
+    transform: translateX(10px); /* Slide effect on hover for logout */
+}
         /* Set a fixed height for the dropdown and enable internal scrolling */
 .dropdown-content {
     display: none;
