@@ -268,54 +268,61 @@ body {
           </div>
         </div>
       </div>
-      
-      <script>
-        // Function to fetch vendor count and update the HTML
-        function fetchVendorCount() {
-            fetch('getVendorCount.php')  // Ensure this path is correct
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error('Network response was not ok');
-                    }
-                    return response.text();
-                })
-                .then(data => {
-                    console.log('Vendor count fetched:', data);  // For debugging
-                    document.getElementById('registered-vendors').textContent = data;
-                })
-                .catch(error => console.error('Error fetching vendor count:', error));
-        }
-      
-        // Function to fetch today's revenue
-        function fetchTodaysRevenue() {
-            fetch('getTodaysRevenue.php')  // Ensure this path is correct
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error('Network response was not ok');
-                    }
-                    return response.text();
-                })
-                .then(data => {
-                    document.getElementById('todays-revenue').textContent = `₱${data}`;
-                })
-                .catch(error => {
-                    console.error('Error fetching today\'s revenue:', error);
-                    document.getElementById('todays-revenue').textContent = "Error loading data";
-                });
-        }
-      
-        // Ensure both functions run on page load
-        window.onload = function() {
-            fetchVendorCount();
-            fetchTodaysRevenue();
-        };
-      
-        // Dropdown toggle logic
-        document.getElementById('vendorDropdown').addEventListener('click', function(event) {
-            var dropdownContent = document.getElementById('vendorDropdownContent');
-            dropdownContent.style.display = dropdownContent.style.display === 'none' || dropdownContent.style.display === '' ? 'block' : 'none';
-        });
-      </script>
+     <script>
+    // Function to fetch vendor count and update the HTML
+    function fetchVendorCount() {
+        fetch('getVendorCount.php')  // Ensure this path is correct
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.text();
+            })
+            .then(data => {
+                console.log('Vendor count fetched:', data);  // For debugging
+                document.getElementById('registered-vendors').textContent = data;
+            })
+            .catch(error => console.error('Error fetching vendor count:', error));
+    }
+
+    // Function to fetch today's revenue
+    function fetchTodaysRevenue() {
+        fetch('getTodaysRevenue.php')  // Ensure this path is correct
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.text();
+            })
+            .then(data => {
+                let todaysRevenue = parseFloat(data);  // Convert the fetched data to a number
+                document.getElementById('todays-revenue').textContent = `₱${todaysRevenue.toFixed(2)}`;
+
+                // Calculate average revenue per day based on today's revenue
+                // For demonstration, let's assume you're calculating an average over 7 days
+                let avgRevenue = todaysRevenue;  // Update this logic as needed for your specific case
+                document.querySelector(".cards .card:nth-child(3) .number").textContent = `₱${avgRevenue.toFixed(2)}`;
+            })
+            .catch(error => {
+                console.error('Error fetching today\'s revenue:', error);
+                document.getElementById('todays-revenue').textContent = "Error loading data";
+                document.querySelector(".cards .card:nth-child(3) .number").textContent = "Error";
+            });
+    }
+
+    // Ensure both functions run on page load
+    window.onload = function() {
+        fetchVendorCount();
+        fetchTodaysRevenue();
+    };
+
+    // Dropdown toggle logic
+    document.getElementById('vendorDropdown').addEventListener('click', function(event) {
+        var dropdownContent = document.getElementById('vendorDropdownContent');
+        dropdownContent.style.display = dropdownContent.style.display === 'none' || dropdownContent.style.display === '' ? 'block' : 'none';
+    });
+</script>
+
       
       <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
       
