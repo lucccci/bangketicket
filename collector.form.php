@@ -225,8 +225,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 .side-menu a:hover {
     background-color: #2A416F;
     color: #fff;
-    transform: translateX(10px); /* Slide to the right on hover */
-}
+   }
 
 
 .side-menu a i {
@@ -260,7 +259,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         .logout:hover {
     background-color: #c0392b;
     color: #fff;
-    transform: translateX(10px); /* Slide effect on hover for logout */
+   
 }
         /* Set a fixed height for the dropdown and enable internal scrolling */
 .dropdown-content {
@@ -272,6 +271,43 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     padding-left: 20px; /* Keep padding to make it look nice */
     padding-right: 20px;
     border-left: 3px solid #031F4E;
+}
+/* Modal for success message */
+.modal-success {
+  display: none; /* Hidden by default */
+  position: fixed; 
+  z-index: 1000; /* Sit on top */
+  left: 0;
+  top: 0;
+  width: 100%; /* Full width */
+  height: 100%; /* Full height */
+  background-color: rgba(0, 0, 0, 0.4); /* Black background with transparency */
+}
+
+/* Modal content */
+.modal-content {
+  background-color: #fefefe;
+  margin: 15% auto; /* 15% from the top and centered */
+  padding: 20px;
+  border: 1px solid #888;
+  width: 30%; /* Could be more or less depending on screen size */
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+  text-align: center;
+}
+
+/* Close button */
+.close-btn {
+  color: #aaa;
+  float: right;
+  font-size: 28px;
+  font-weight: bold;
+}
+
+.close-btn:hover,
+.close-btn:focus {
+  color: #000;
+  text-decoration: none;
+  cursor: pointer;
 }
 
 
@@ -362,11 +398,42 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
       </form>
     </div>
 </div>
+
+<!-- Modal Structure -->
+<div id="successModal" class="modal-success">
+  <div class="modal-content">
+    <span class="close-btn">&times;</span>
+    <p>Successfully Added!</p>
+  </div>
+</div>
+
 <script>
 document.querySelector('.dropdown a').addEventListener('click', function(event) {
   event.preventDefault();
   this.parentElement.classList.toggle('active');
 });
+// Function to show the modal after form submission
+function showModal() {
+  const modal = document.getElementById("successModal");
+  const closeBtn = document.querySelector(".close-btn");
+
+  // Show the modal
+  modal.style.display = "block";
+
+  // Close the modal when the user clicks the 'x' button
+  closeBtn.onclick = function() {
+    modal.style.display = "none";
+    window.location.href = "collector.php"; // Redirect to collector.php after closing modal
+  }
+
+  // Close the modal if the user clicks outside of the modal
+  window.onclick = function(event) {
+    if (event.target == modal) {
+      modal.style.display = "none";
+      window.location.href = "collector.php"; // Redirect to collector.php after closing modal
+    }
+  }
+}
 
   </script>
 </body>

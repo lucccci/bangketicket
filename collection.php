@@ -102,7 +102,7 @@ $collectorResult = $conn->query($collectorQuery);
 .side-menu a:hover {
     background-color: #2A416F;
     color: #fff;
-    transform: translateX(10px); /* Slide to the right on hover */
+
 }
 
 

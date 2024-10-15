@@ -220,7 +220,7 @@ body {
   z-index: 1000;
   overflow-y: auto;
   overflow-x:hidden;
-  transition: width 0.3s;
+
   padding: 2px;
 }
 
@@ -246,7 +246,7 @@ body {
 .side-menu a:hover {
   background-color: #2A416F;
   color: #fff;
-  transform: translateX(10px); /* Slide to the right on hover */
+
 }
 
 

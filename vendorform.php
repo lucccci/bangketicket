@@ -149,7 +149,7 @@ if (isset($_REQUEST['sbt-btn'])) {
 .side-menu a:hover {
     background-color: #2A416F;
     color: #fff;
-    transform: translateX(10px); /* Slide to the right on hover */
+    
 }
 
 
@@ -184,7 +184,7 @@ if (isset($_REQUEST['sbt-btn'])) {
         .logout:hover {
     background-color: #c0392b;
     color: #fff;
-    transform: translateX(10px); /* Slide effect on hover for logout */
+   
 }
         /* Set a fixed height for the dropdown and enable internal scrolling */
 .dropdown-content {

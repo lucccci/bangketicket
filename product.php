@@ -72,7 +72,7 @@ body {
 .side-menu a:hover {
     background-color: #2A416F;
     color: #fff;
-    transform: translateX(10px); /* Adds smooth slide on hover */
+ 
 }
 
 .side-menu a i {
