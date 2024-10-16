@@ -28,6 +28,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $midName = $_POST['MidName'];
     $lastName = $_POST['lastName'];
     $suffix = $_POST['suffix'];
+    $email = $_POST['email'];
     $birthday = $_POST['birthday'];
 
     // Fetch the last collector_id from the database in descending order
@@ -47,8 +48,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     }
 
     // First insert collector details WITHOUT username and password
-    $stmt = $conn->prepare("INSERT INTO collectors (collector_id, first_name, middle_name, last_name, suffix, birthday) VALUES (?, ?, ?, ?, ?, ?)");
-    $stmt->bind_param("ssssss", $newId, $firstName, $midName, $lastName, $suffix, $birthday);
+    $stmt = $conn->prepare("INSERT INTO collectors (collector_id, first_name, middle_name, last_name, suffix, email, birthday) VALUES (?, ?, ?, ?, ?, ?)");
+    $stmt->bind_param("sssssss", $newId, $firstName, $midName, $lastName, $suffix, $email, $birthday);
 
     // Execute the query
     if ($stmt->execute()) {
@@ -386,7 +387,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
           <option value="IV">IV</option>
           <option value="V">V</option>
         </select>
-
+        <label for="email">Email:</label>
+        <input type="text" id="email" name="email" placeholder="Enter Email" required>
         <label for="birthday">Birthday:</label>
         <input type="date" id="birthday" name="birthday" required>
 

@@ -34,8 +34,8 @@ if (isset($_GET['id'])) {
         echo "<script>alert('Collector with ID: $collector_id is already archived.'); window.location.href='collector.php';</script>";
     } else {
         // SQL query to copy data from collectors to archive_collectors
-        $sql_copy = "INSERT INTO archive_collectors (collector_id, fname, mname, lname, suffix, birthday)
-                     SELECT collector_id, fname, mname, lname, suffix, birthday
+        $sql_copy = "INSERT INTO archive_collectors (collector_id, fname, mname, lname, suffix, email, birthday)
+                     SELECT collector_id, fname, mname, lname, suffix, email, birthday
                      FROM collectors WHERE collector_id = ?";
 
         // Prepare and bind

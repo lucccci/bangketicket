@@ -44,6 +44,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $midName = $_POST['MidName'];
     $lastName = $_POST['lastName'];
     $suffix = $_POST['suffix'];
+    $email = $_POST['email'];
     $birthday = $_POST['birthday'];
 
     // Fetch the last collector_id from the database
@@ -63,8 +64,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     }
 
     // Prepare SQL query to insert data into the database
-    $sql = "INSERT INTO collectors (collector_id, fname, mname, lname, suffix, birthday)
-            VALUES ('$newId', '$firstName', '$midName', '$lastName', '$suffix', '$birthday')";
+    $sql = "INSERT INTO collectors (collector_id, fname, mname, lname, suffix, email, birthday)
+            VALUES ('$newId', '$firstName', '$midName', '$lastName', '$suffix', '$email', '$birthday')";
 
     // Execute query and check for success
     if ($conn->query($sql) === TRUE) {
