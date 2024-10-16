@@ -16,6 +16,8 @@ if ($result->num_rows > 0) {
 <html lang="en">
 <head>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+
     <link rel="icon" href="pics/logo-bt.png">
     <link rel="stylesheet" href="menuheaderDB.css">
   <link rel="stylesheet" href="logo.css">
@@ -232,8 +234,17 @@ body {
     <div class="logo">
       <img src="pics/logo.png" alt="Logo">
     </div>
-    <a href="dashboard.html"><i class="fas fa-chart-line"></i> Dashboard</a>
-    <a href="product.php"class="active"><i class="fas fa-box"></i> Product</a>
+    <a href="dashboard.html">
+        <span class="material-icons" style="vertical-align: middle; font-size: 18px;">dashboard</span>
+        <span style="margin-left: 8px;">Dashboard</span>
+    </a>
+    
+    <a href="product.php" class="active">
+    <span class="material-icons" style="vertical-align: middle; font-size: 18px;">payments</span>
+    <span style="margin-left: 8px;">Market Fee</span>
+</a>
+
+
     
     <!-- Dropdown for Vendors -->
     <div class="dropdown">
@@ -255,14 +266,14 @@ body {
 
 <div class="main-content">
   <div class="panel">
-    <h2>Products</h2>
+    <h2>Market Fee</h2>
     <div class="registered-vendors">
       <table class="usersTable">
         <thead>
           <tr>
             <th>Product ID</th>
-            <th>Product Type</th>
-            <th>Market Fee Occupancy</th>
+            <th>Description/Item</th>
+            <th>Amount</th>
           </tr>
         </thead>
         <tbody>

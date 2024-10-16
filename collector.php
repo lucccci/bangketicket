@@ -67,32 +67,34 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $sql = "INSERT INTO collectors (collector_id, fname, mname, lname, suffix, email, birthday)
             VALUES ('$newId', '$firstName', '$midName', '$lastName', '$suffix', '$email', '$birthday')";
 
-    // Execute query and check for success
-    if ($conn->query($sql) === TRUE) {
-        // Generate username and password
-        $generatedUsername = strtolower(preg_replace('/\s+/', '', $firstName)); 
-        $formattedBirthday = date('Ymd', strtotime($birthday)); 
-        $generatedPasswordPlain = strtolower($lastName) . $formattedBirthday;
+  // Execute query and check for success
+if ($conn->query($sql) === TRUE) {
+    // Generate username and password
+    $generatedUsername = strtolower(preg_replace('/\s+/', '', $firstName)); 
+    $formattedBirthday = date('Ymd', strtotime($birthday)); 
+    $generatedPasswordPlain = strtolower($lastName) . $formattedBirthday;
 
-        // Update the database with generated credentials
-        $stmt_update = $conn->prepare("UPDATE collectors SET username = ?, password = ? WHERE collector_id = ?");
-        if (!$stmt_update) {
-            echo "Prepare failed: (" . $conn->errno . ") " . $conn->error;
-            exit();
-        }
-        $stmt_update->bind_param("sss", $generatedUsername, $generatedPasswordPlain, $newId);
+    // Update the database with generated credentials
+    $stmt_update = $conn->prepare("UPDATE collectors SET username = ?, password = ? WHERE collector_id = ?");
+    if (!$stmt_update) {
+        echo "Prepare failed: (" . $conn->errno . ") " . $conn->error;
+        exit();
+    }
+    $stmt_update->bind_param("sss", $generatedUsername, $generatedPasswordPlain, $newId);
 
-        if ($stmt_update->execute()) {
-            // Display the generated username and password
-            echo "New collector registered successfully with ID: $newId<br>";
-        } else {
-            echo "Error updating credentials: " . $stmt_update->error;
-        }
+    if ($stmt_update->execute()) {
         // Close the update statement
         $stmt_update->close();
+
+        // Redirect back to collector.php to refresh the page
+        header("Location: collector.php");
+        exit();
     } else {
-        echo "Error: " . $sql . "<br>" . $conn->error;
+        echo "Error updating credentials: " . $stmt_update->error;
     }
+} else {
+    echo "Error: " . $sql . "<br>" . $conn->error;
+}
 }
 
 ?>
@@ -102,6 +104,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 <html lang="en">
 <head>
     <script src="https://kit.fontawesome.com/7d64038428.js" crossorigin="anonymous"></script>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <link rel="icon" href="pics/logo-bt.png">
     <link rel="stylesheet" href="menuheaderDB.css">
@@ -476,8 +479,16 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     <div class="logo">
         <img src="pics/logo.png" alt="Logo">
     </div>
-    <a href="dashboard.html"><i class="fas fa-chart-line"></i> Dashboard</a>
-    <a href="product.php"><i class="fas fa-box"></i> Product</a>
+        <a href="dashboard.html" class="active">
+        <span class="material-icons" style="vertical-align: middle; font-size: 18px;">dashboard</span>
+        <span style="margin-left: 8px;">Dashboard</span>
+    </a>
+    
+    <a href="product.php">
+    <span class="material-icons" style="vertical-align: middle; font-size: 18px;">payments</span>
+    <span style="margin-left: 8px;">Market Fee</span>
+</a>
+
 
     <div class="dropdown">
         <a href="vendorlist.php" id="vendorDropdown" class="dropdown-toggle"><i class="fas fa-users"></i> Vendors</a>

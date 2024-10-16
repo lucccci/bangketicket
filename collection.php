@@ -68,6 +68,7 @@ $collectorResult = $conn->query($collectorQuery);
 <head>
     <script src="https://kit.fontawesome.com/7d64038428.js" crossorigin="anonymous"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">    
     <link rel="icon" href="pics/logo-bt.png">
     <link rel="stylesheet" href="menuheaderDB.css">
     <link rel="stylesheet" href="logo.css">
@@ -436,8 +437,16 @@ $collectorResult = $conn->query($collectorQuery);
     <div class="logo">
         <img src="pics/logo.png" alt="Logo">
     </div>
-    <a href="dashboard.html"><i class="fas fa-chart-line"></i> Dashboard</a>
-    <a href="product.php"><i class="fas fa-box"></i> Product</a>
+    <a href="dashboard.html">
+        <span class="material-icons" style="vertical-align: middle; font-size: 18px;">dashboard</span>
+        <span style="margin-left: 8px;">Dashboard</span>
+    </a>
+    
+    <a href="product.php">
+    <span class="material-icons" style="vertical-align: middle; font-size: 18px;">payments</span>
+    <span style="margin-left: 8px;">Market Fee</span>
+</a>
+
 
     <div class="dropdown">
         <a href="vendorlist.php" id="vendorDropdown" class="dropdown-toggle"><i class="fas fa-users"></i> Vendors</a>

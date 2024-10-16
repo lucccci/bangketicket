@@ -172,6 +172,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 <html lang="en">
 <head>   
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
   <link rel="icon" href="pics/logo-bt.png">
   <link rel="stylesheet" href="menuheader.css">
   <link rel="stylesheet" href="sidemenu.css">
@@ -611,8 +612,16 @@ body {
     <div class="logo">
         <img src="pics/logo.png" alt="Logo">
     </div>
-    <a href="dashboard.html"><i class="fas fa-chart-line"></i> Dashboard</a>
-    <a href="product.php"><i class="fas fa-box"></i> Product</a>
+    <a href="dashboard.html">
+        <span class="material-icons" style="vertical-align: middle; font-size: 18px;">dashboard</span>
+        <span style="margin-left: 8px;">Dashboard</span>
+    </a>
+    
+    <a href="product.php">
+    <span class="material-icons" style="vertical-align: middle; font-size: 18px;">payments</span>
+    <span style="margin-left: 8px;">Market Fee</span>
+</a>
+
     <div class="dropdown active">
         <a href="#" class="active"><i class="fas fa-users"></i> Vendors</a>
         <div class="dropdown-content" style="display: block;">
@@ -953,7 +962,7 @@ const barangayData = {
     "Bocaue": ["Antipona", "Bagumbayan", "Bambang", "Batia", "Biñang 1st", "Biñang 2nd", "Bolacan", "Bundukan", "Bunlo", "Caingin", "Duhat", "Igulot", "Lolomboy", "Poblacion", "Sulucan", "Taal", "Tambubong", "Turo", "Wakas"],
     "Bulakan": ["Bagumbayan", "Balubad", "Bambang", "Matungao", "Maysantol", "Pitpitan", "Perez", "San Francisco", "San Jose", "San Nicolas", "Santa Ana", "Sapang", "Taliptip", "Tibig"],
     "Bustos": ["Bonga Mayor", "Bonga Menor", "Camachile", "Cambaog", "Catacte", "Malamig", "Mina", "Pagala", "Poblacion", "San Pedro", "Santor", "Talampas"],
-    "Calumpit": ["Balungao", "Buguion", "Calizon", "Calumpang", "Corazon", "Frances", "Gatbuca", "Gugo", "Iba Este", "Iba Oeste", "Longos", "Lumbreras", "Mabolo", "Maysantol", "Palimbang", "Panginay", "Pio Cruzcosa", "Poblacion", "Pulo", "San Jose", "San Juan", "San Marcos", "Santa Catalina", "Santa Lucia", "Santo Cristo", "Sapang Bayan", "Sapang Putol", "Sucol", "Tabon"],
+    "Calumpit": ["Balungao", "Buguion", "Calizon", "Calumpang", "Corazon", "Frances", "Gatbuca", "Gugo", "Iba Este", "Iba Oeste", "Longos", "Lumbreras", "Mabolo", "Maysantol", "Palimbang", "Panginay", "Pio Cruzcosa", "Poblacion", "Pulo", "San Jose", "San Juan", "San Marcos", "Santa Catalina", "Santa Lucia", "Santo Cristo", "Sapang Bayan", "Sapang Putol","Sergio Bayan","Sucol", "Tabon"],
     "Doña Remedios Trinidad": ["Bagong Barrio", "Bakal I", "Bakal II", "Bayabas", "Camachin", "Camachile", "Kalawakan", "Kabayunan", "Pulong Sampalok", "Sapang Bulak"],
     "Guiguinto": ["Cutcut", "Daungan", "Ilang-ilang", "Malis", "Panginay", "Poblacion", "Pritil", "Pulong Gubat", "Santa Cruz", "Santa Rita","Tabang","Tabe","Tiaong","Tuktukan"],
     "Hagonoy": ["Abulalas", "Carillo", "Iba", "Iba-Iba", "Palapat", "Pugad", "San Agustin", "San Isidro", "San Jose", "San Juan", "San Miguel", "San Nicolas", "San Pablo", "San Pascual", "San Pedro", "San Roque", "Santa Elena", "Santa Monica", "Santo Niño", "Santo Rosario", "Tampok"],

@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
   <script src="https://kit.fontawesome.com/7d64038428.js" crossorigin="anonymous"></script>
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
   <link rel="icon" href="pics/logo-bt.png">
   <link rel="stylesheet" href="menuheaderDB.css">
@@ -222,12 +223,24 @@ body {
 
 <div class="overlay" onclick="toggleDropdown()"></div>
 
+
 <div id="sideMenu" class="side-menu">
     <div class="logo">
       <img src="pics/logo.png" alt="Logo">
     </div>
-    <a href="dashboard.html" class="active"><i class="fas fa-chart-line"></i> Dashboard</a>
-    <a href="product.php"><i class="fas fa-box"></i> Product</a>
+
+    <a href="dashboard.html" class="active">
+        <span class="material-icons" style="vertical-align: middle; font-size: 18px;">dashboard</span>
+        <span style="margin-left: 8px;">Dashboard</span>
+    </a>
+    
+    
+    <a href="product.php">
+    <span class="material-icons" style="vertical-align: middle; font-size: 18px;">payments</span>
+    <span style="margin-left: 8px;">Market Fee</span>
+</a>
+
+
     
     <!-- Dropdown for Vendors -->
     <div class="dropdown">
@@ -245,7 +258,6 @@ body {
     <!-- Log Out Link -->
     <a href="index.html" class="logout"><i class="fas fa-sign-out-alt"></i> Log Out</a>
 </div>
-
 
 <div class="main">
     <div class="main">

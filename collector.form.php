@@ -74,6 +74,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 <html lang="en">
 <head>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
   <link rel="icon" href="pics/logo-bt.png">
   <link rel="stylesheet" href="menuheader.css">
   <link rel="stylesheet" href="vendorform.css">
@@ -343,8 +344,15 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
   <div class="logo">
     <img src="pics/logo.png" alt="Logo">
   </div>
-  <a href="dashboard.html"><i class="fas fa-chart-line"></i> Dashboard</a>
-  <a href="product.php"><i class="fas fa-box"></i> Product</a>
+  <a href="dashboard.html">
+        <span class="material-icons" style="vertical-align: middle; font-size: 18px;">dashboard</span>
+        <span style="margin-left: 8px;">Dashboard</span>
+    </a>
+    
+  <a href="product.php">
+    <span class="material-icons" style="vertical-align: middle; font-size: 18px;">payments</span>
+    <span style="margin-left: 8px;">Market Fee</span>
+</a>
 
   <!-- Changed Vendors dropdown to a direct link -->
   <a href="vendorlist.php"><i class="fas fa-users"></i> Vendors</a>
