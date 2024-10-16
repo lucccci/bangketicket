@@ -73,10 +73,20 @@ if (isset($_REQUEST['sbt-btn'])) {
         $updateQuery = mysqli_query($conn, "UPDATE vendor_list SET qrimage='$qrimage' WHERE vendorID='$formattedID'");
 
         ?>
-        <script>
-            alert("Data saved successfully with Vendor ID: <?php echo $formattedID; ?>");
-        </script>
-        <?php
+       ?>
+       <?php
+    if ($query) {
+        // Show success modal instead of alert
+        echo '<script>
+            window.onload = function() {
+                document.getElementById("successModal").style.display = "block";
+            };
+        </script>';
+    }
+?>
+
+<?php
+
     } else {
         echo "<p>Error saving data.</p>";
     }
@@ -219,6 +229,68 @@ if (isset($_REQUEST['sbt-btn'])) {
     background-color: #6B8CAE; /* Darker grey on hover */
 }
 
+
+/* The successModal (background) */
+#successModal {
+    display: none; /* Hidden by default */
+    position: fixed; /* Stay in place */
+    z-index: 1000; /* Sit on top */
+    left: 0;
+    top: 0;
+    width: 100%; /* Full width */
+    height: 100%; /* Full height */
+    background-color: rgba(0, 0, 0, 0.4); /* Black w/ opacity */
+}
+
+/* successModal Content */
+#successModal .success-modal-content {
+    background-color: #fff;
+    margin: 15% auto;
+    padding: 20px;
+    border: 1px solid #888;
+    width: 80%;
+    max-width: 400px; /* Maximum width */
+    text-align: center;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+/* Close button (X) */
+#successModal .success-close {
+    color: #aaa;
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+}
+
+#successModal .success-close:hover,
+#successModal .success-close:focus {
+    color: black;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+/* OK button style */
+#successModal .success-modal-button {
+    padding: 10px 20px;
+    background-color: #031F4E;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    margin-top: 10px;
+}
+
+#successModal .success-modal-button:hover {
+    background-color: #2A416F;
+}
+.success-message {
+    color: black; /* Change text color to red */
+    
+    font-size: 12px; /* Optional: increase the font size */
+    margin-top: 15px; /* Optional: add some spacing above */
+}
+
   </style>
 </head>
 <body>
@@ -354,16 +426,55 @@ if (isset($_REQUEST['sbt-btn'])) {
 </div>
 
 
-
-<div id="myModal" class="modal">
-  <div class="modal-content">
-    <span class="close">&times;</span>
-    <p>No notification yet.</p>
-  </div>
+<!-- The successModal -->
+<div id="successModal" class="modal">
+    <div class="success-modal-content">
+        <span class="success-close">&times;</span>
+        <!-- Add the checkmark GIF here -->
+        <img src="pics/check.gif" alt="Success Checkmark" style="width:100px; height:100px; display:block; margin: 0 auto;">
+        <h3>Success!</h3>
+        <p class="success-message">Vendor ID: <?php echo $formattedID; ?> has been successfully saved.</p>
+        <button class="success-modal-button" id="redirectButton">OK</button>
+    </div>
 </div>
+
+
 
 <script>
 
+
+// Get the modal
+var successModal = document.getElementById("successModal");
+
+// Get the <span> element that closes the modal
+var successClose = document.getElementsByClassName("success-close")[0];
+
+// Get the "OK" button
+var successOkButton = document.getElementById("redirectButton");
+
+// When the user clicks on <span> (x), close the modal
+successClose.onclick = function () {
+    successModal.style.display = "none";
+}
+
+// When the user clicks anywhere outside of the modal, close it
+window.onclick = function (event) {
+    if (event.target == successModal) {
+        successModal.style.display = "none";
+    }
+}
+
+// Redirect to vendorlist.php when "OK" button is clicked
+successOkButton.onclick = function () {
+    window.location.href = 'vendorlist.php'; // Redirect after clicking OK
+}
+
+// Show the modal when the form is submitted successfully
+window.onload = function () {
+    <?php if (isset($_REQUEST['sbt-btn'])) { ?>
+        successModal.style.display = "block";
+    <?php } ?>
+};
 
 
   //CONTACT
