@@ -577,6 +577,7 @@ $archivedVendorsResult = $conn->query("SELECT * FROM archive_vendors ORDER BY ve
 }
 
 /* Apply styling for the rows with additional information */
+/* Additional info section styling */
 .additional-info .info-row {
     padding-left: 10px;
     border-left: 3px solid #031F4E; /* Blue left border */
@@ -584,19 +585,17 @@ $archivedVendorsResult = $conn->query("SELECT * FROM archive_vendors ORDER BY ve
     padding-bottom: 5px;
 }
 
-/* Style for the strong tags inside .additional-info */
+/* Bold the labels inside .additional-info */
 .additional-info strong {
-    display: inline-block;
-    width: 150px; /* Adjust width if needed to align text */
-    text-align: left; /* Align text to the left */
-    font-weight: bold;
-    margin-right: 10px; /* Space between label and value */
+    font-weight: bold; /* Make the label bold */
+  
+    width: 150px; /* Controls the width of the label section to create space between label and value */
+    text-align: left; /* Aligns label text to the left */
+
 }
 
-/* Ensure text alignment for the .additional-info container */
-.additional-info {
-    text-align: left; /* Ensure text is aligned to the left */
-}
+
+
     </style>
 </head>
 <body>
@@ -701,23 +700,24 @@ $archivedVendorsResult = $conn->query("SELECT * FROM archive_vendors ORDER BY ve
                         </button>
                     </td>
                 </tr>
-                <!-- Hidden additional details row with the title -->
+              
                 <tr class="additional-info" id="details-<?php echo htmlspecialchars($vendor['vendorID']); ?>" style="display:none;">
-                    <td colspan="9">
-                        <div class="info-title">
-                            <strong>Additional Details</strong>
-                        </div>
-                        <!-- Each row of details wrapped in a div with the class 'info-row' -->
-                        <div class="info-row">Gender: <?php echo htmlspecialchars($vendor['gender']); ?></div>
-                        <div class="info-row">Birthday: <?php echo htmlspecialchars($vendor['birthday']); ?></div>
-                        <div class="info-row">Age: <?php echo htmlspecialchars($vendor['age']); ?></div>
-                        <div class="info-row">Province: <?php echo htmlspecialchars($vendor['province']); ?></div>
-                        <div class="info-row">Municipality: <?php echo htmlspecialchars($vendor['municipality']); ?></div>
-                        <div class="info-row">Barangay: <?php echo htmlspecialchars($vendor['barangay']); ?></div>
-                        <div class="info-row">House #: <?php echo htmlspecialchars($vendor['houseNo']); ?></div>
-                        <div class="info-row">Street Name: <?php echo htmlspecialchars($vendor['streetname']); ?></div>
-                    </td>
-                </tr>
+    <td colspan="9">
+        <div class="info-title">
+            <strong>Additional Details</strong>
+        </div>
+        <!-- Each row of details wrapped in a div with the class 'info-row' -->
+        <div class="info-row"><strong>Gender:</strong> <?php echo htmlspecialchars($vendor['gender']); ?></div>
+        <div class="info-row"><strong>Birthday:</strong> <?php echo htmlspecialchars($vendor['birthday']); ?></div>
+        <div class="info-row"><strong>Age:</strong> <?php echo htmlspecialchars($vendor['age']); ?></div>
+        <div class="info-row"><strong>Province:</strong> <?php echo htmlspecialchars($vendor['province']); ?></div>
+        <div class="info-row"><strong>Municipality:</strong> <?php echo htmlspecialchars($vendor['municipality']); ?></div>
+        <div class="info-row"><strong>Barangay:</strong> <?php echo htmlspecialchars($vendor['barangay']); ?></div>
+        <div class="info-row"><strong>House #:</strong> <?php echo htmlspecialchars($vendor['houseNo']); ?></div>
+        <div class="info-row"><strong>Street Name:</strong> <?php echo htmlspecialchars($vendor['streetname']); ?></div>
+    </td>
+</tr>
+
 
             <?php endforeach; ?>
         <?php endif; ?>
