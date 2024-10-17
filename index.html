@@ -19,6 +19,41 @@
     overflow: hidden; /* Disable scrolling */
 }
 
+/* Modal Styling */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 9999;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.7);
+}
+
+.modal-content {
+    background-color: #fff;
+    margin: 15% auto;
+    padding: 20px;
+    border-radius: 10px;
+    width: 50%;
+    text-align: center;
+}
+
+.modal button {
+    margin-top: 15px;
+    padding: 10px 20px;
+    background-color: #031F4E;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.modal button:hover {
+    background-color: #035C96;
+}
+
 .header {
     display: flex;
     align-items: center;
@@ -102,7 +137,6 @@
     transition: transform 0.5s ease,  filter 0.5s ease; /* Add transition effect */
 }
 
-
 .login-form input {
     padding: 10px;
     margin-bottom: 15px;
@@ -159,7 +193,12 @@
     width: 50%; 
     margin: 10px auto; 
 }
-
+.modal-icon {
+    width: 100px; /* Adjust the size to fit the design */
+    height: 100px;
+    display: block;
+    margin: 0 auto 20px; /* Centers the image horizontally and adds margin below it */
+}
 </style>
 </head>
 <body>
@@ -189,25 +228,44 @@
     <img src="pics/bangketicket.png" alt="Your Logo" style="width: 350px; height: 70px; margin-bottom: 0px; margin-right: -50px;">
     <h2 class="login-title"><span class="welcome-text">Welcome</span> <span class="admin-text">Admin!</span></h2>
     <hr class="title-line">
-    <form id="loginForm" onsubmit="return login()" action="#" method="post">
-        <label for="username">Admin ID</label>
-        <input type="text" id="username" name="username" placeholder="Enter your ID" required>
-
-        <label for="password">Password</label>
-        <div style="position: relative;">
-            <input type="password" id="password" name="password" placeholder="Enter your password" required>
-            <i class="fas fa-eye password-toggle" onclick="togglePasswordVisibility('password')"></i>
-        </div>
-
-        <button type="submit" class="login-button">Login</button>
-    </form>
+    <form id="loginForm" onsubmit="return login();" method="post">
+      <label for="username">Username</label>
+      <input type="text" id="username" name="username" placeholder="Enter your username" required>
+  
+      <label for="password">Password</label>
+      <div style="position: relative;">
+          <input type="password" id="password" name="password" placeholder="Enter your password" required>
+          <i class="fas fa-eye password-toggle" onclick="togglePasswordVisibility('password')"></i>
+      </div>
+  
+      <button type="submit" class="login-button">Login</button>
+  </form>
+  
     <br>
     <a href="forgotpass.html" class="forgot-password">Forgot Password?</a>
   </div>
 </div>
 
-<!-- Forgot Password Form -->
-]
+<!-- Success Modal -->
+<div id="successModal" class="modal">
+  <div class="modal-content">
+    <img src="pics/check.gif" alt="Success" class="modal-icon">
+    <h2>Successful Login</h2>
+    <p>Welcome, Admin! You will be redirected to the dashboard.</p>
+    <button onclick="closeModal('successModal')">OK</button>
+  </div>
+</div>
+
+
+<!-- Failure Modal -->
+<div id="failureModal" class="modal">
+  <div class="modal-content">
+    <img src="pics/x.gif" alt="Error" class="modal-icon">
+    <h2>Failed to Login</h2>
+    <p>Username or password did not match. Please try again.</p>
+    <button onclick="closeModal('failureModal')">OK</button>
+  </div>
+</div>
 
 
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
@@ -227,17 +285,25 @@
     var username = document.getElementById("username").value;
     var password = document.getElementById("password").value;
 
-    // Check if username and password match the default admin account
-    if (username === "020569" && password === "aer0205") {
-      // Redirect to specific page
-      window.location.href = "dashboard.html";
-      return false; // Prevent form submission
+    // Mock validation (replace this with actual AJAX request to the server for validation)
+    if (username === "adminBT001" && password === "admin001") {
+      showModal('successModal');
+      setTimeout(function() {
+        window.location.href = "dashboard.html"; // Redirect to dashboard after success
+      }, 2000); // Delay for 2 seconds
+      return false;
     } else {
-      // Handle incorrect login (optional)
-        // Display custom error message
-        alert("Incorrect ID or password. Please try again.");
+      showModal('failureModal');
       return false; // Prevent form submission
     }
+  }
+
+  function showModal(modalId) {
+    document.getElementById(modalId).style.display = 'block';
+  }
+
+  function closeModal(modalId) {
+    document.getElementById(modalId).style.display = 'none';
   }
 
   // Initialize Slick Carousel
