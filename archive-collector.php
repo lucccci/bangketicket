@@ -354,40 +354,49 @@ $archivedCollectorsResult = $conn->query("SELECT * FROM archive_collectors ORDER
 
     </div>
 
-        <table class="collector-table">
-            <thead>
-            <tr>
-                <th>Collector ID</th>
-                <th>First Name</th>
-                <th>Middle Name</th>
-                <th>Last Name</th>
-                <th>Suffix</th>
-                <th>Birthday</th>
-                <th>Action</th>
-            </tr>
-            </thead>
-            <tbody>
-            <?php
-            if ($result->num_rows > 0) {
-                // Output data of each row
-                while ($row = $result->fetch_assoc()) {
-                    echo "<tr>
-                            <td>" . $row['collector_id'] . "</td>
-                            <td>" . $row['first_name'] . "</td>
-                            <td>" . $row['middle_name'] . "</td>
-                            <td>" . $row['last_name'] . "</td>
-                            <td>" . $row['suffix'] . "</td>
-                            <td>" . $row['birthday'] . "</td>
-                            <td>
-                                <a href='restore_collector.php?id=" . $row['collector_id'] . "' class='restore-btn' onclick='return confirm(\"Are you sure you want to restore this collector?\")'><i class='fas fa-undo'></i></a>
-                            </td>
-                          </tr>";
-                }
-            } else {
-                echo "<tr><td colspan='7'>No records found</td></tr>";
+    <table class="collector-table">
+    <thead>
+        <tr>
+            <th>Collector ID</th>
+            <th>First Name</th>
+            <th>Middle Name</th>
+            <th>Last Name</th>
+            <th>Suffix</th>
+            <th>Birthday</th>
+            <th>Action</th>
+        </tr>
+    </thead>
+    <tbody>
+        <?php
+        if ($result->num_rows > 0) {
+            // Output data of each row
+            while ($row = $result->fetch_assoc()) {
+                // Check for empty fields and display 'N/A' if necessary
+                $firstName = !empty($row['first_name']) ? $row['first_name'] : 'N/A';
+                $middleName = !empty($row['middle_name']) ? $row['middle_name'] : 'N/A';
+                $lastName = !empty($row['last_name']) ? $row['last_name'] : 'N/A';
+                $suffix = !empty($row['suffix']) ? $row['suffix'] : 'N/A';
+                $birthday = !empty($row['birthday']) ? $row['birthday'] : 'N/A';
+
+                echo "<tr>
+                     <td><strong>" . $row['collector_id'] . "</strong></td>
+                        <td>" . $firstName . "</td>
+                        <td>" . $middleName . "</td>
+                        <td>" . $lastName . "</td>
+                        <td>" . $suffix . "</td>
+                        <td>" . $birthday . "</td>
+                        <td>
+                            <a href='restore_collector.php?id=" . $row['collector_id'] . "' class='restore-btn' onclick='return confirm(\"Are you sure you want to restore this collector?\")'><i class='fas fa-undo'></i></a>
+                        </td>
+                      </tr>";
             }
-            ?>
-            </tbody>
+        } else {
+            echo "<tr><td colspan='7'>No records found</td></tr>";
+        }
+        ?>
+    </tbody>
+</table>
+
             <tfoot>
             <tr>
                 <td colspan="10">

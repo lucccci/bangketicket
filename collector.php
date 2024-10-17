@@ -67,34 +67,14 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $sql = "INSERT INTO collectors (collector_id, fname, mname, lname, suffix, email, birthday)
             VALUES ('$newId', '$firstName', '$midName', '$lastName', '$suffix', '$email', '$birthday')";
 
-  // Execute query and check for success
-if ($conn->query($sql) === TRUE) {
-    // Generate username and password
-    $generatedUsername = strtolower(preg_replace('/\s+/', '', $firstName)); 
-    $formattedBirthday = date('Ymd', strtotime($birthday)); 
-    $generatedPasswordPlain = strtolower($lastName) . $formattedBirthday;
-
-    // Update the database with generated credentials
-    $stmt_update = $conn->prepare("UPDATE collectors SET username = ?, password = ? WHERE collector_id = ?");
-    if (!$stmt_update) {
-        echo "Prepare failed: (" . $conn->errno . ") " . $conn->error;
-        exit();
-    }
-    $stmt_update->bind_param("sss", $generatedUsername, $generatedPasswordPlain, $newId);
-
-    if ($stmt_update->execute()) {
-        // Close the update statement
-        $stmt_update->close();
-
+    // Execute query and check for success
+    if ($conn->query($sql) === TRUE) {
         // Redirect back to collector.php to refresh the page
         header("Location: collector.php");
         exit();
     } else {
-        echo "Error updating credentials: " . $stmt_update->error;
+        echo "Error: " . $sql . "<br>" . $conn->error;
     }
-} else {
-    echo "Error: " . $sql . "<br>" . $conn->error;
-}
 }
 
 ?>
@@ -568,13 +548,21 @@ if ($conn->query($sql) === TRUE) {
             // Use $collectorsResult for fetching and displaying collectors
             if ($collectorsResult && $collectorsResult->num_rows > 0) {  
                 while ($row = $collectorsResult->fetch_assoc()) {
+                    // Use 'N/A' if fields are empty, only for relevant fields
+                    $firstName = !empty($row['fname']) ? $row['fname'] : 'N/A';
+                    $midName = !empty($row['mname']) ? $row['mname'] : 'N/A';
+                    $lastName = !empty($row['lname']) ? $row['lname'] : 'N/A';
+                    $suffix = !empty($row['suffix']) ? $row['suffix'] : 'N/A';
+                    $birthday = !empty($row['birthday']) ? $row['birthday'] : 'N/A';
+                    
+                    // Skip email display
                     echo "<tr>
                             <td>" . $row['collector_id'] . "</td>
-                            <td>" . $row['fname'] . "</td>
-                            <td>" . $row['mname'] . "</td>
-                            <td>" . $row['lname'] . "</td>
-                            <td>" . $row['suffix'] . "</td>
-                            <td>" . $row['birthday'] . "</td>
+                            <td>" . $firstName . "</td>
+                            <td>" . $midName . "</td>
+                            <td>" . $lastName . "</td>
+                            <td>" . $suffix . "</td>
+                            <td>" . $birthday . "</td>
                             <td>
                                 <button class='edit-btn' data-id='" . $row['collector_id'] . "' 
                                         data-firstname='" . $row['fname'] . "' 

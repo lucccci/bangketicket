@@ -49,14 +49,14 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
     // First insert collector details WITHOUT username and password
     $stmt = $conn->prepare("INSERT INTO collectors (collector_id, first_name, middle_name, last_name, suffix, email, birthday) VALUES (?, ?, ?, ?, ?, ?)");
+
     $stmt->bind_param("sssssss", $newId, $firstName, $midName, $lastName, $suffix, $email, $birthday);
 
     // Execute the query
     if ($stmt->execute()) {
         echo "Collector details inserted successfully.<br>"; // Add this for debugging
-
-        // Close the update statement
-        $stmt_update->close();
+        // Call the function to show modal after successful insertion
+        echo "<script>showModal();</script>";
     } else {
         echo "Error inserting collector details: " . $stmt->error;
         error_log("Error inserting collector details: " . $stmt->error);
@@ -125,7 +125,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     form input[type="submit"] {
       width: 20%;
       margin-top: 20px;
-      margin-left:40%; /* Align to the right */
+      margin-left: 40%; /* Align to the right */
       padding: 15px 40px;
       background-color: #031F4E;
       color: #fff;
@@ -143,7 +143,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
     /* Button for going back */
     .back-button {
-    
       color: #031F4E;
       border: 1px solid #031F4E;
       padding: 10px 20px;
@@ -170,7 +169,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
       background-color: #031F4E;
     }
 
-    
     .main-content {
       padding: 20px;
       margin-left: 260px; /* Adjust based on your sidebar width */
@@ -189,152 +187,179 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
       color: #666;
     }
 
-/* Sidebar */
-.side-menu {
-    width: 260px;
-    height: 100vh;
-    background-color: #fff;
-    color: #031F4E;
-    position: fixed;
-    top: 0;
-    left: 0;
-    z-index: 1000;
-    overflow-y: auto;
-    overflow-x:hidden;
-    transition: width 0.3s;
-    padding: 2px;
-}
-
-.side-menu .logo {
-    text-align: center;
-    padding: 20px;
-}
-
-.side-menu .logo img {
-    max-width: 100%;
-    height: auto;
-}
-
-.side-menu a {
-    display: flex;
-    align-items: center;
-    padding: 15px 20px;
-    color: #031F4E;
-    text-decoration: none;
-    transition: background 0.3s ease, color 0.3s ease, transform 0.2s ease-in-out; /* Smooth transitions for hover */
-}
-
-.side-menu a:hover {
-    background-color: #2A416F;
-    color: #fff;
-   }
-
-
-.side-menu a i {
-    margin-right: 10px;
-}
-
-.side-menu a.active {
-    background-color: #031F4E;
-    color: #fff;
-}
-
-.side-menu a.active i {
-    color: #fff;
-}
-
-.side-menu a:hover:not(.active) {
-    background-color: #2A416F;
-    color: #fff;
-}
-
-
-.logout {
-            color: #e74c3c; /* Log Out link color */
-            padding: 15px 20px; /* Padding for Log Out link */
-            margin-top: 215px; /* Add space above Log Out link */
-            display: flex; /* Ensure the icon and text align properly */
-            align-items: center; /* Center align the icon and text vertically */
-            transition: background 0.3s, color 0.3s; /* Transition effects */
-        }
-
-        .logout:hover {
-    background-color: #c0392b;
-    color: #fff;
-   
-}
-        /* Set a fixed height for the dropdown and enable internal scrolling */
-.dropdown-content {
-    display: none;
-    background-color: #fefcfc;
-    position: relative;
-    max-height: 150px; /* Set a fixed height for the dropdown */
-    overflow-y: auto; /* Enable internal scrolling if content exceeds the height */
-    padding-left: 20px; /* Keep padding to make it look nice */
-    padding-right: 20px;
-    border-left: 3px solid #031F4E;
-}
-/* Modal for success message */
-.modal-success {
-  display: none; /* Hidden by default */
-  position: fixed; 
-  z-index: 1000; /* Sit on top */
-  left: 0;
-  top: 0;
-  width: 100%; /* Full width */
-  height: 100%; /* Full height */
-  background-color: rgba(0, 0, 0, 0.4); /* Black background with transparency */
-}
-
-/* Modal content */
-.modal-content {
-  background-color: #fefefe;
-  margin: 15% auto; /* 15% from the top and centered */
-  padding: 20px;
-  border: 1px solid #888;
-  width: 30%; /* Could be more or less depending on screen size */
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
-  text-align: center;
-}
-
-/* Close button */
-.close-btn {
-  color: #aaa;
-  float: right;
-  font-size: 28px;
-  font-weight: bold;
-}
-
-.close-btn:hover,
-.close-btn:focus {
-  color: #000;
-  text-decoration: none;
-  cursor: pointer;
-}
-
-
-
-  </style>
-   <script>
-    // JavaScript to auto-generate username and password based on input fields
-    function generateCredentials() {
-        const firstName = document.getElementById('firstName').value;
-        const lastName = document.getElementById('lastName').value;
-        const birthday = document.getElementById('birthday').value;
-
-        if (firstName && lastName && birthday) {
-            // Generate username (first name + first letter of last name)
-            const username = firstName.toLowerCase() + lastName.charAt(0).toLowerCase();
-
-            // Generate password (first name + birthday in YYYYMMDD format)
-            const formattedBirthday = birthday.replace(/-/g, '');
-            const password = firstName.toLowerCase() + formattedBirthday;
-
-            // Set the generated values in hidden fields
-            document.getElementById('generatedUsername').value = username;
-            document.getElementById('generatedPassword').value = password;
-        }
+    /* Sidebar */
+    .side-menu {
+        width: 260px;
+        height: 100vh;
+        background-color: #fff;
+        color: #031F4E;
+        position: fixed;
+        top: 0;
+        left: 0;
+        z-index: 1000;
+        overflow-y: auto;
+        overflow-x: hidden;
+        transition: width 0.3s;
+        padding: 2px;
     }
+
+    .side-menu .logo {
+        text-align: center;
+        padding: 20px;
+    }
+
+    .side-menu .logo img {
+        max-width: 100%;
+        height: auto;
+    }
+
+    .side-menu a {
+        display: flex;
+        align-items: center;
+        padding: 15px 20px;
+        color: #031F4E;
+        text-decoration: none;
+        transition: background 0.3s ease, color 0.3s ease, transform 0.2s ease-in-out; /* Smooth transitions for hover */
+    }
+
+    .side-menu a:hover {
+        background-color: #2A416F;
+        color: #fff;
+    }
+
+    .side-menu a i {
+        margin-right: 10px;
+    }
+
+    .side-menu a.active {
+        background-color: #031F4E;
+        color: #fff;
+    }
+
+    .side-menu a.active i {
+        color: #fff;
+    }
+
+    .side-menu a:hover:not(.active) {
+        background-color: #2A416F;
+        color: #fff;
+    }
+
+    .logout {
+        color: #e74c3c; /* Log Out link color */
+        padding: 15px 20px; /* Padding for Log Out link */
+        margin-top: 215px; /* Add space above Log Out link */
+        display: flex; /* Ensure the icon and text align properly */
+        align-items: center; /* Center align the icon and text vertically */
+        transition: background 0.3s, color 0.3s; /* Transition effects */
+    }
+
+    .logout:hover {
+        background-color: #c0392b;
+        color: #fff;
+    }
+
+    /* Set a fixed height for the dropdown and enable internal scrolling */
+    .dropdown-content {
+        display: none;
+        background-color: #fefcfc;
+        position: relative;
+        max-height: 150px; /* Set a fixed height for the dropdown */
+        overflow-y: auto; /* Enable internal scrolling if content exceeds the height */
+        padding-left: 20px; /* Keep padding to make it look nice */
+        padding-right: 20px;
+        border-left: 3px solid #031F4E;
+    }
+
+    /* Modal for success message */
+    .modal-success {
+      display: none; /* Hidden by default */
+      position: fixed; 
+      z-index: 1000; /* Sit on top */
+      left: 0;
+      top: 0;
+      width: 100%; /* Full width */
+      height: 100%; /* Full height */
+      background-color: rgba(0, 0, 0, 0.4); /* Black background with transparency */
+    }
+
+    /* Modal content */
+    .modal-content {
+      background-color: #fefefe;
+      margin: 15% auto; /* 15% from the top and centered */
+      padding: 20px;
+      border: 1px solid #888;
+      width: 30%; /* Could be more or less depending on screen size */
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+      text-align: center;
+    }
+
+    /* Close button */
+    .close-btn {
+      color: #aaa;
+      float: right;
+      font-size: 28px;
+      font-weight: bold;
+    }
+
+    .close-btn:hover,
+    .close-btn:focus {
+      color: #000;
+      text-decoration: none;
+      cursor: pointer;
+    }
+  </style>
+  <script>
+    // JavaScript to auto-capitalize the first letter of each word
+    function capitalizeFirstLetter(input) {
+      const words = input.value.split(' ');
+      for (let i = 0; i < words.length; i++) {
+        words[i] = words[i].charAt(0).toUpperCase() + words[i].slice(1);
+      }
+      input.value = words.join(' ');
+    }
+
+    // Function to show the modal after form submission
+    function showModal() {
+      const modal = document.getElementById("successModal");
+      const closeBtn = document.querySelector(".close-btn");
+
+      // Show the modal
+      modal.style.display = "block";
+
+      // Close the modal when the user clicks the 'x' button
+      closeBtn.onclick = function() {
+        modal.style.display = "none";
+        window.location.href = "collector.php"; // Redirect to collector.php after closing modal
+      }
+
+      // Close the modal if the user clicks outside of the modal
+      window.onclick = function(event) {
+        if (event.target == modal) {
+          modal.style.display = "none";
+          window.location.href = "collector.php"; // Redirect to collector.php after closing modal
+        }
+      }
+    }
+
+    // Add event listeners to inputs
+    document.addEventListener("DOMContentLoaded", function() {
+      const firstNameInput = document.getElementById("firstName");
+      const midNameInput = document.getElementById("MidName");
+      const lastNameInput = document.getElementById("lastName");
+
+      firstNameInput.addEventListener("input", function() {
+        capitalizeFirstLetter(firstNameInput);
+      });
+
+      midNameInput.addEventListener("input", function() {
+        capitalizeFirstLetter(midNameInput);
+      });
+
+      lastNameInput.addEventListener("input", function() {
+        capitalizeFirstLetter(lastNameInput);
+      });
+    });
   </script>
 </head>
 <body>
@@ -365,7 +390,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
   <a href="index.html" class="logout"><i class="fas fa-sign-out-alt"></i> Log Out</a>
 </div>
 
-  <div class="main-content">
+<div class="main-content">
     <div class="panel">
       <button class="back-button" onclick="window.location.href='collector.php'">
         <i class="fas fa-arrow-left"></i> 
@@ -375,37 +400,36 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
       <h5 class="personalinfo-heading">Personal Details</h5>
 
       <!-- Form sends data to collector.php -->
-      <form id="userInfoForm" action="collector.php" method="POST" onsubmit="generateCredentials()">
-        <label for="firstName">First Name:</label>
-        <input type="text" id="firstName" name="firstName" placeholder="Enter First Name" required>
+    <form id="userInfoForm" action="collector.php" method="POST">
+    <label for="firstName">First Name:</label>
+    <input type="text" id="firstName" name="firstName" placeholder="Enter First Name" required>
 
-        <label for="MidName">Middle Name:</label>
-        <input type="text" id="MidName" name="MidName" placeholder="Enter Middle Name" required>
+    <label for="MidName">Middle Name:</label>
+    <input type="text" id="MidName" name="MidName" placeholder="Enter Middle Name"> <!-- Middle name is now optional -->
 
-        <label for="lastName">Last Name:</label>
-        <input type="text" id="lastName" name="lastName" placeholder="Enter Last Name" required>
+    <label for="lastName">Last Name:</label>
+    <input type="text" id="lastName" name="lastName" placeholder="Enter Last Name" required>
 
-        <label for="suffix">Suffix:</label>
-        <select id="suffix" name="suffix">
-          <option value="">Select Suffix</option>
-          <option value="Jr.">Jr.</option>
-          <option value="Sr.">Sr.</option>
-          <option value="II">II</option>
-          <option value="III">III</option>
-          <option value="IV">IV</option>
-          <option value="V">V</option>
-        </select>
-        <label for="email">Email:</label>
-        <input type="text" id="email" name="email" placeholder="Enter Email" required>
-        <label for="birthday">Birthday:</label>
-        <input type="date" id="birthday" name="birthday" required>
+    <label for="suffix">Suffix:</label>
+    <select id="suffix" name="suffix">
+      <option value="">Select Suffix</option>
+      <option value="Jr.">Jr.</option>
+      <option value="Sr.">Sr.</option>
+      <option value="II">II</option>
+      <option value="III">III</option>
+      <option value="IV">IV</option>
+      <option value="V">V</option>
+    </select>
 
-        <!-- Hidden fields for storing auto-generated username and password -->
-        <input type="hidden" id="generatedUsername" name="username">
-        <input type="hidden" id="generatedPassword" name="password">
+    <label for="email">Email:</label>
+    <input type="text" id="email" name="email" placeholder="Enter Email" required>
 
-        <input type="submit" value="Register Collector" name="sbt-btn">
-      </form>
+    <label for="birthday">Birthday:</label>
+    <input type="date" id="birthday" name="birthday" required>
+
+    <input type="submit" value="Register Collector" name="sbt-btn">
+</form>
+ 
     </div>
 </div>
 
@@ -413,38 +437,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 <div id="successModal" class="modal-success">
   <div class="modal-content">
     <span class="close-btn">&times;</span>
-    <p>Successfully Added!</p>
+    <p>Collector Successfully Added!</p>
   </div>
 </div>
 
-<script>
-document.querySelector('.dropdown a').addEventListener('click', function(event) {
-  event.preventDefault();
-  this.parentElement.classList.toggle('active');
-});
-// Function to show the modal after form submission
-function showModal() {
-  const modal = document.getElementById("successModal");
-  const closeBtn = document.querySelector(".close-btn");
-
-  // Show the modal
-  modal.style.display = "block";
-
-  // Close the modal when the user clicks the 'x' button
-  closeBtn.onclick = function() {
-    modal.style.display = "none";
-    window.location.href = "collector.php"; // Redirect to collector.php after closing modal
-  }
-
-  // Close the modal if the user clicks outside of the modal
-  window.onclick = function(event) {
-    if (event.target == modal) {
-      modal.style.display = "none";
-      window.location.href = "collector.php"; // Redirect to collector.php after closing modal
-    }
-  }
-}
-
-  </script>
 </body>
 </html>
