@@ -1,42 +1,53 @@
 <?php
-session_start();
+header('Content-Type: application/json');
 
-// Database connection settings
-$servername = "localhost"; // Usually 'localhost' for local environments like XAMPP
-$db_username = "root"; // Your MySQL username (default for XAMPP is 'root')
-$db_password = ""; // Your MySQL password (default for XAMPP is usually empty)
-$dbname = "bangketicketdb"; // Your database name as shown in the image
+// Database connection
+$servername = "localhost";
+$username = "root";
+$password = "";
+$dbname = "bangketicketdb";
 
 // Create connection
-$conn = new mysqli($servername, $db_username, $db_password, $dbname);
+$conn = new mysqli($servername, $username, $password, $dbname);
 
 // Check connection
 if ($conn->connect_error) {
-    die("Connection failed: " . $conn->connect_error);
+    die(json_encode(['success' => false, 'message' => 'Database connection failed.']));
 }
 
-// If the form is submitted
-if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    $username = $_POST['username'];
-    $password = $_POST['password'];
+// Handle login request
+if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['username']) && isset($_POST['password'])) {
+    // Get the username and password from the request
+    $input_username = $_POST['username'];
+    $input_password = $_POST['password'];
 
-    // Sanitize inputs to prevent SQL injection
-    $username = $conn->real_escape_string($username);
-    $password = $conn->real_escape_string($password);
+    // Prepare and execute the query to fetch the user details
+    $stmt = $conn->prepare("SELECT * FROM admin_account WHERE username = ?");
+    $stmt->bind_param("s", $input_username);
+    $stmt->execute();
+    $result = $stmt->get_result();
 
-    // Query to check if the username and password match in the database
-    $sql = "SELECT * FROM admin_account WHERE username = '$username' AND password = '$password'";
-    $result = $conn->query($sql);
-
+    // Check if the username exists
     if ($result->num_rows > 0) {
-        // Login successful, store session variables and redirect to dashboard
-        $_SESSION['username'] = $username;
-        header("Location: dashboard.html");
-        exit();
+        $admin = $result->fetch_assoc();
+        // Compare the entered password with the stored password
+        if ($input_password === $admin['password']) {
+            // Successful login
+            session_start();
+            $_SESSION['admin_id'] = $admin['admin_id']; // Store admin_id in session
+            echo json_encode(['success' => true, 'message' => 'Login successful']);
+        } else {
+            // Incorrect password
+            echo json_encode(['success' => false, 'message' => 'Incorrect password.']);
+        }
     } else {
-        // Invalid login, show error message
-        echo "<script>alert('Incorrect username or password. Please try again.'); window.location.href = 'index.html';</script>";
+        // Username does not exist
+        echo json_encode(['success' => false, 'message' => 'Username not found.']);
     }
+
+    $stmt->close();
+} else {
+    echo json_encode(['success' => false, 'message' => 'Invalid request.']);
 }
 
 $conn->close();
