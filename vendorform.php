@@ -7,23 +7,24 @@ $vendor_list = $path . time() . ".png";
 $qrimage = time() . ".png";
 
 if (isset($_REQUEST['sbt-btn'])) {
-    $fName = $_REQUEST['firstName'];
-    $mname = $_REQUEST['MidName'];
-    $lName = $_REQUEST['lastName'];
-    $suffix = $_REQUEST['suffix'];
-    $gender = $_REQUEST['gender'];
-    $birthday = $_REQUEST['birthday'];
-    $age = $_REQUEST['age'];
-    $contactNo = $_REQUEST['contactNo'];
-    $province = $_REQUEST['province'];
-    $municipality = $_REQUEST['city'];
-    $barangay = $_REQUEST['barangay'];
-    $houseNo = $_REQUEST['houseNumber'];
-    $streetname = $_REQUEST['streetName'];
+  // Get form data and replace empty fields with "N/A"
+  $fName = $_REQUEST['firstName'];
+  $mname = !empty($_REQUEST['MidName']) ? $_REQUEST['MidName'] : 'N/A';
+  $lName = $_REQUEST['lastName'];
+  $suffix = !empty($_REQUEST['suffix']) ? $_REQUEST['suffix'] : 'N/A';
+  $gender = $_REQUEST['gender'];
+  $birthday = $_REQUEST['birthday'];
+  $age = !empty($_REQUEST['age']) ? $_REQUEST['age'] : 'N/A';
+  $contactNo = !empty($_REQUEST['contactNo']) ? $_REQUEST['contactNo'] : 'N/A';
+  $province = $_REQUEST['province'];
+  $municipality = $_REQUEST['city'];
+  $barangay = $_REQUEST['barangay'];
+  $houseNo = $_REQUEST['houseNumber'];
+  $streetname = $_REQUEST['streetName'];
 
-    // Fetch the current last used ID from the sequence table
-    $result = mysqli_query($conn, "SELECT last_used_id FROM vendor_id_sequence LIMIT 1");
-    $row = mysqli_fetch_assoc($result);
+  // Fetch the current last used ID from the sequence table
+  $result = mysqli_query($conn, "SELECT last_used_id FROM vendor_id_sequence LIMIT 1");
+  $row = mysqli_fetch_assoc($result);
     
     if ($row) {
         // Increment the last used ID
@@ -353,7 +354,7 @@ if (isset($_REQUEST['sbt-btn'])) {
 <input type="text" id="firstName" name="firstName" placeholder="Enter First Name" required>
 
 <label for="MidName">Middle Name:</label>
-<input type="text" id="MidName" name="MidName" placeholder="Enter Middle Name" required>
+<input type="text" id="MidName" name="MidName" placeholder="Enter Middle Name">
 
 <label for="lastName">Last Name:</label>
 <input type="text" id="lastName" name="lastName" placeholder="Enter Last Name" required>
@@ -387,7 +388,7 @@ if (isset($_REQUEST['sbt-btn'])) {
 <label for="contactNo">Contact Number:</label>
 <div class="phone-input-container">
   <span><img src="philippineflag.webp" alt="Philippine Flag"> +63</span>
-  <input type="text" id="contactNo" name="contactNo" pattern="\d{10}" placeholder="XXXXXXXXXX" maxlength="10" required>
+  <input type="text" id="contactNo" name="contactNo" pattern="\d{10}" placeholder="XXXXXXXXXX" maxlength="10">
 </div>
 
 

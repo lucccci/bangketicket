@@ -261,8 +261,9 @@ $collectorResult = $conn->query($collectorQuery);
         }
 
         .filter-form button:hover {
-            background-color: #2A416F;
-            color: #fff;
+            background-color: #6A85BB; /* Change background on hover */
+    color: #fff; /* Ensure text color remains white */
+    transform: scale(1.05); /* Slightly enlarge the button on hover */
         }
 
         .filter-form button i {
@@ -270,8 +271,10 @@ $collectorResult = $conn->query($collectorQuery);
         }
 
         .filter-form .export-button {
+            font-weight: bold;
+            background-color: #2A416F;
             font-size: 13px;
-            color: #031F4E;
+            color: #fff;
             border: 1px solid #031F4E;
             cursor: pointer;
             border-radius: 4px;
@@ -427,6 +430,36 @@ $collectorResult = $conn->query($collectorQuery);
         .collector-dropdown-menu button:last-child {
             border-bottom: none;
         }
+
+                /* Style the filter form buttons */
+.filter-form .search-button {
+    background-color: #2A416F; /* Dark blue background */
+    color: white; /* White icon color */
+    border: none; /* Remove border */
+    padding: 10px; /* Add padding for spacing */
+    border-radius: 5px; /* Rounded corners */
+    cursor: pointer; /* Show pointer cursor on hover */
+    transition: background-color 0.3s ease; /* Smooth transition for hover effect */
+}
+
+.filter-form .search-button i {
+    font-size: 16px; /* Icon size */
+}
+
+.filter-form .search-button:hover {
+    background-color: #6A85BB; /* Change background on hover */
+    color: #fff; /* Ensure text color remains white */
+    transform: scale(1.05); /* Slightly enlarge the button on hover */
+}
+
+.filter-form .search-button:focus {
+    outline: none; /* Remove focus outline */
+}
+
+.filter-form .search-button:active {
+    background-color: #16283f; /* Even darker color when clicked */
+}
+
         
     </style>
 </head>
@@ -481,8 +514,12 @@ $collectorResult = $conn->query($collectorQuery);
                 </select>
                 </select>
                 <input type="text" name="filter_value" placeholder="Enter value" value="<?php echo htmlspecialchars($filter_value); ?>">
-                <button type="submit"><i class="fas fa-search"></i></button>
-                <button type="button" class="export-button" onclick="toggleReportDropdown()">Generate Report &nbsp;<i class="fas fa-file-export"></i></button>
+                <button type="submit" class="search-button"><i class="fas fa-search"></i></button>
+                <button type="button" class="export-button" onclick="toggleReportDropdown()">
+  Generate Report &nbsp;
+  <img src="pics/icons8-analyze-40.png" alt="Analyze Icon" style="vertical-align: middle; width: 20px; height: 20px;">
+</button>
+    
             </form>
         </div>
 

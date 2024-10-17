@@ -512,9 +512,10 @@ body {
 }
 
 .export-button {
-  background-color: transparent;
-            color: #031F4E;
+  background-color: #2A416F;
+            color: #fff;
             border: 1px solid #031F4E;
+            font-weight: bold;
             cursor: pointer;
             padding: 0 12px;
             border-radius: 4px;
@@ -526,14 +527,15 @@ body {
 }
 
 .export-button:hover {
-  background-color: #2A416F;
-  color: #fff;
+    background-color: #6A85BB; /* Change background on hover */
+    color: #fff; /* Ensure text color remains white */
+    transform: scale(1.05); /* Slightly enlarge the button on hover */
 }
 
 .add-vendor-button {
-
-  background-color: transparent;
-            color: #031F4E;
+    font-weight: bold;
+  background-color: #2A416F;
+            color: #fff;
             border: 1px solid #031F4E;
             cursor: pointer;
             padding: 0 12px;
@@ -549,8 +551,9 @@ body {
 }
 
 .add-vendor-button:hover {
-  background-color: #2A416F;
-  color: #fff;
+    background-color: #6A85BB; /* Change background on hover */
+    color: #fff; /* Ensure text color remains white */
+    transform: scale(1.05); /* Slightly enlarge the button on hover */
 }
 
 
@@ -558,8 +561,9 @@ body {
 
 .search-button {
             
-            background-color: transparent;
-            color: #031F4E;
+    font-weight: bold;
+    background-color: #2A416F;
+            color: #fff;
             border: 1px solid #031F4E;
             cursor: pointer;
             padding: 0 12px;
@@ -575,8 +579,9 @@ body {
 }
 
 .search-button:hover {
-  background-color: #2A416F;
-    color: #fff;
+    background-color: #6A85BB; /* Change background on hover */
+    color: #fff; /* Ensure text color remains white */
+    transform: scale(1.05); /* Slightly enlarge the button on hover */
 }
 
 
@@ -658,9 +663,17 @@ body {
         <button class="search-button" onclick="filterTable()">
             <i class="fas fa-search"></i> <!-- Font Awesome Search Icon -->
         </button>
-        <button class="export-button" onclick="location.href='export.php'">Export</button>
+        <button class="export-button" onclick="location.href='export.php'">
+    Export
+    <img src="pics/icons8-export-csv-80.png" alt="Export CSV Icon" style="width: 20px; height: 20px; margin-left: 8px;">
+</button>
+
     </div>
-    <button class="add-vendor-button" onclick="location.href='vendorform.php'">Add Vendor</button>  
+    <button class="add-vendor-button" onclick="location.href='vendorform.php'">
+    Add Vendor
+    <span class="material-icons" style="margin-left: 2px;">add</span>
+</button>
+  
 </div>
 
 
@@ -683,68 +696,66 @@ body {
             </tr>
         </thead>
         <tbody>
-            <?php foreach ($cust as $customer) : ?>
-                <tr class="vendor-row">
-                    <td>
-                        <button class="expand-collapse-btn" onclick="toggleDetails(this)">
-                            <i class="fas fa-chevron-right"></i>
-                        </button>
-                    </td>
-                    <td><b><?php echo $customer['vendorID']; ?></b></td>
-                    <td><?php echo $customer['fname']; ?></td>
-                    <td><?php echo $customer['mname']; ?></td>
-                    <td><?php echo $customer['lname']; ?></td>
-                      <td><?php echo !empty($customer['suffix']) ? $customer['suffix'] : 'N/A'; ?></td>
-            <td><?php echo $customer['status']; ?></td>  <!-- Display the status (Paid or Unpaid) -->
-                    <td><?php echo $customer['contactNo']; ?></td>
-                    <td>
-                        <button class="action-view" onclick="openQRModal('<?php echo $customer['vendorID']; ?>')">View QR</button>
-                        <button class="action-edit" onclick="openEditModal('<?php echo $customer['vendorID']; ?>')">
-    <i class="fa fa-edit"></i>
-</button>
+    <?php foreach ($cust as $customer) : ?>
+        <tr class="vendor-row">
+            <td>
+                <button class="expand-collapse-btn" onclick="toggleDetails(this)">
+                    <i class="fas fa-chevron-right"></i>
+                </button>
+            </td>
+            <td><b><?php echo $customer['vendorID']; ?></b></td>
+            <td><?php echo !empty($customer['fname']) ? $customer['fname'] : 'N/A'; ?></td>
+            <td><?php echo !empty($customer['mname']) ? $customer['mname'] : 'N/A'; ?></td>
+            <td><?php echo !empty($customer['lname']) ? $customer['lname'] : 'N/A'; ?></td>
+            <td><?php echo !empty($customer['suffix']) ? $customer['suffix'] : 'N/A'; ?></td>
+            <td><?php echo $customer['status']; ?></td> <!-- Display the status (Paid or Unpaid) -->
+            <td><?php echo !empty($customer['contactNo']) ? $customer['contactNo'] : 'N/A'; ?></td>
+            <td>
+                <button class="action-view" onclick="openQRModal('<?php echo $customer['vendorID']; ?>')">View QR</button>
+                <button class="action-edit" onclick="openEditModal('<?php echo $customer['vendorID']; ?>')">
+                    <i class="fa fa-edit"></i>
+                </button>
+                <form style="display: inline;" action="<?php echo $_SERVER['PHP_SELF']; ?>" method="post" onsubmit="return confirm('Are you sure you want to move Vendor ID <?php echo $customer['vendorID']; ?> - <?php echo $customer['fname']; ?> <?php echo $customer['lname']; ?> to the Archive Section?');">
+                    <input type="hidden" name="cust_id_to_delete" value="<?php echo $customer['vendorID']; ?>">
+                    <button type="submit" class="action-delete"><i class="fa fa-trash"></i></button>
+                </form>
+            </td>
+        </tr>
+        <!-- Hidden additional details row -->
+        <tr class="additional-info">
+            <td colspan="9">
+                <div class="info-title">
+                    <strong>Additional Details</strong>
+                </div>
+                <div class="info-row">
+                    <strong>Gender:</strong> <?php echo !empty($customer['gender']) ? $customer['gender'] : 'N/A'; ?>
+                </div>
+                <div class="info-row">
+                    <strong>Birthday:</strong> <?php echo !empty($customer['birthday']) ? $customer['birthday'] : 'N/A'; ?>
+                </div>
+                <div class="info-row">
+                    <strong>Age:</strong> <?php echo !empty($customer['age']) ? $customer['age'] : 'N/A'; ?>
+                </div>
+                <div class="info-row">
+                    <strong>Province:</strong> <?php echo !empty($customer['province']) ? $customer['province'] : 'N/A'; ?>
+                </div>
+                <div class="info-row">
+                    <strong>Municipality:</strong> <?php echo !empty($customer['municipality']) ? $customer['municipality'] : 'N/A'; ?>
+                </div>
+                <div class="info-row">
+                    <strong>Barangay:</strong> <?php echo !empty($customer['barangay']) ? $customer['barangay'] : 'N/A'; ?>
+                </div>
+                <div class="info-row">
+                    <strong>House #:</strong> <?php echo !empty($customer['houseNo']) ? $customer['houseNo'] : 'N/A'; ?>
+                </div>
+                <div class="info-row">
+                    <strong>Street Name:</strong> <?php echo !empty($customer['streetname']) ? $customer['streetname'] : 'N/A'; ?>
+                </div>
+            </td>
+        </tr>
+    <?php endforeach; ?>
+</tbody>
 
-                        </button>
-                        <form style="display: inline;" action="<?php echo $_SERVER['PHP_SELF']; ?>" method="post" onsubmit="return confirm('Are you sure you want to move Vendor ID <?php echo $customer['vendorID']; ?> - <?php echo $customer['fname']; ?> <?php echo $customer['lname']; ?> to the Archive Section?');">
-    <input type="hidden" name="cust_id_to_delete" value="<?php echo $customer['vendorID']; ?>">
-    <button type="submit" class="action-delete"><i class="fa fa-trash"></i></button>
-</form>
-
-                    </td>
-                </tr>
-                <!-- Hidden additional details row -->
-                <tr class="additional-info">
-                    <td colspan="9">
-                        <div class="info-title">
-                            <strong>Additional Details</strong>
-                        </div>
-                        <div class="info-row">
-                            <strong>Gender:</strong> <?php echo $customer['gender']; ?>
-                        </div>
-                        <div class="info-row">
-                            <strong>Birthday:</strong> <?php echo $customer['birthday']; ?>
-                        </div>
-                        <div class="info-row">
-                            <strong>Age:</strong> <?php echo $customer['age']; ?>
-                        </div>
-                        <div class="info-row">
-                            <strong>Province:</strong> <?php echo $customer['province']; ?>
-                        </div>
-                        <div class="info-row">
-                            <strong>Municipality:</strong> <?php echo $customer['municipality']; ?>
-                        </div>
-                        <div class="info-row">
-                            <strong>Barangay:</strong> <?php echo $customer['barangay']; ?>
-                        </div>
-                        <div class="info-row">
-                            <strong>House #:</strong> <?php echo $customer['houseNo']; ?>
-                        </div>
-                        <div class="info-row">
-                            <strong>Street Name:</strong> <?php echo $customer['streetname']; ?>
-                        </div>
-                    </td>
-                </tr>
-            <?php endforeach; ?>
-        </tbody>
         <tfoot>
             <tr>
                 <td colspan="9">

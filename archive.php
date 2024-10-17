@@ -530,28 +530,31 @@ $archivedVendorsResult = $conn->query("SELECT * FROM archive_vendors ORDER BY ve
     outline: none; /* Removes the default focus outline */
     border-color: #2A416F; /* Changes border color when focused */
 }
+
 .search-button {
             
-            background-color: transparent;
-            color: #031F4E;
-            border: 1px solid #031F4E;
-            cursor: pointer;
-            padding: 0 12px;
-            border-radius: 4px;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            height: 40px; 
-            
-}
-.search-button i{
-  font-size: 15px;
-}
-
-.search-button:hover {
-  background-color: #2A416F;
-    color: #fff;
-}
+            font-weight: bold;
+            background-color: #2A416F;
+                    color: #fff;
+                    border: 1px solid #031F4E;
+                    cursor: pointer;
+                    padding: 0 12px;
+                    border-radius: 4px;
+                    display: inline-flex;
+                    align-items: center;
+                    justify-content: center;
+                    height: 40px; 
+                    
+        }
+        .search-button i{
+          font-size: 15px;
+        }
+        
+        .search-button:hover {
+            background-color: #6A85BB; /* Change background on hover */
+    color: #fff; /* Ensure text color remains white */
+    transform: scale(1.05); /* Slightly enlarge the button on hover */
+        }
 .expand-collapse-btn {
     background: none;
     border: none;
@@ -596,6 +599,26 @@ $archivedVendorsResult = $conn->query("SELECT * FROM archive_vendors ORDER BY ve
 }
 
 
+.export-button {
+  background-color: #2A416F;
+            color: #fff;
+            border: 1px solid #031F4E;
+            font-weight: bold;
+            cursor: pointer;
+            padding: 0 12px;
+            border-radius: 4px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            height: 40px; 
+           
+}
+
+.export-button:hover {
+    background-color: #6A85BB; /* Change background on hover */
+    color: #fff; /* Ensure text color remains white */
+    transform: scale(1.05); /* Slightly enlarge the button on hover */
+}
 
     </style>
 </head>
@@ -641,9 +664,10 @@ $archivedVendorsResult = $conn->query("SELECT * FROM archive_vendors ORDER BY ve
 
             <!-- Add dropdown button here -->
             <div class="custom-dropdown">
-                <button class="custom-dropdown-btn">
-                    <i class="far fa-caret-square-down"></i>
-                </button>
+            <button class="custom-dropdown-btn">
+        <img src="pics/icons8-dropdown-48.png" alt="Dropdown Icon" style="width: 20px; height: 20px;">
+    </button>
+
                 <div class="custom-dropdown-container">
                     <a href="archive-collector.php">Archive Collectors</a>
                 </div>
@@ -663,7 +687,11 @@ $archivedVendorsResult = $conn->query("SELECT * FROM archive_vendors ORDER BY ve
             <i class="fas fa-search"></i> <!-- Font Awesome Search Icon -->
         </button>
         <!-- Export button -->
-        <button class="export-button" onclick="exportToCSV()">Export</button>
+        <button class="export-button" onclick="exportToCSV()">
+    Export
+    <img src="pics/icons8-export-csv-80.png" alt="Export CSV Icon" style="width: 20px; height: 20px; margin-left: 8px;">
+</button>
+
     </div>
 </div>
 

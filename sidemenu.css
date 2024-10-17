@@ -242,6 +242,7 @@
     background-color: #ffffff;
   }
   .action-view, .action-edit, .action-delete {
+   
         background: none;
         border: none;
         cursor: pointer;

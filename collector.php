@@ -302,6 +302,7 @@ if ($conn->query($sql) === TRUE) {
 #addCollectorBtn:hover {
     background-color: #2A416F;
     color: white;
+    
 }
 
         .logout {
@@ -467,7 +468,39 @@ if ($conn->query($sql) === TRUE) {
 .collector-table th:nth-child(1),
 .collector-table td:nth-child(1) {
     font-weight: bold;
+}.title-button-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
 }
+
+.add-collector-button {
+    background-color: #2A416F; /* Adjust color as needed */
+    font-weight: bold;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    transition: background-color 0.3s ease;
+}
+
+.add-collector-button:hover {
+  background-color: #6A85BB; /* Change background on hover */
+    color: #fff; /* Ensure text color remains white */
+    transform: scale(1.05); /* Slightly enlarge the button on hover */
+}
+
+.add-collector-button:focus {
+    outline: none;
+}
+
+.add-collector-button:active {
+    background-color: #16283f;
+}
+
 
     </style>
 </head>
@@ -508,10 +541,14 @@ if ($conn->query($sql) === TRUE) {
 
 <div class="main">
     <div class="panel">
-        <div class="title-button-container">
-            <h2>Collector Table</h2>
-            <a href="collector.form.php" id="addCollectorBtn">Add Collector</a>
-        </div>
+    <div class="title-button-container">
+    <h2>Collector Table</h2>
+    <button class="add-collector-button" onclick="location.href='collector.form.php'">
+        Add Collector
+        <span class="material-icons" style="margin-left: 2px;">add</span>
+    </button>
+</div>
+
         
         <!-- Start of collector table -->
         <table class="collector-table">

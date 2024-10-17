@@ -275,21 +275,30 @@ $archivedCollectorsResult = $conn->query("SELECT * FROM archive_collectors ORDER
 }
 
 .export-btn {
-    padding: 10px 20px;
-    background-color: #031F4E;
-    color: white;
-    border-radius: 5px;
-    text-decoration: none;
-    font-size: 14px;
+    display: inline-flex; /* Use flexbox for alignment */
+    align-items: center; /* Center the icon and text vertically */
+    background-color: #2A416F; /* Background color */
+    color: #fff; /* Text color */
+    border: 1px solid #031F4E; /* Border color */
+    font-weight: bold; /* Bold text */
+    cursor: pointer; /* Pointer cursor on hover */
+    padding: 10px 15px; /* Padding around the button */
+    border-radius: 5px; /* Rounded corners */
+    text-decoration: none; /* Remove underline from the link */
+    font-size: 14px; /* Font size */
+    transition: background-color 0.3s, transform 0.3s; /* Smooth transition */
 }
 
-.export-btn i {
-    margin-right: 5px;
+.export-btn img {
+    width: 20px; /* Set a consistent width for the icon */
+    height: 20px; /* Set a consistent height for the icon */
+    margin-left: 8px; /* Space between text and icon */
 }
 
 .export-btn:hover {
-    background-color: #2A416F; /* Change color on hover */
-    color: #fff;
+    background-color: #6A85BB; /* Change background on hover */
+    color: #fff; /* Ensure text color remains white */
+    transform: scale(1.05); /* Slightly enlarge the button on hover */
 }
 
     </style>
@@ -339,8 +348,10 @@ $archivedCollectorsResult = $conn->query("SELECT * FROM archive_collectors ORDER
         <h2>Archive Collectors</h2>
         <!-- Export to CSV button aligned to the right -->
         <a href="export_collectors_csv.php" class="export-btn">
-            <i class="fas fa-file-csv"></i> Export
-        </a>
+    Export
+    <img src="pics/icons8-export-csv-80.png" alt="Export CSV Icon" style="width: 20px; height: 20px; margin-left: 8px;">
+</a>
+
     </div>
 
         <table class="collector-table">
