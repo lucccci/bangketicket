@@ -66,6 +66,7 @@
 .side-menu a:hover {
   background-color: #2A416F;
   color: #fff;
+  transform: translateX(10px); /* Slide to the right on hover */
 
 }
 
@@ -398,12 +399,35 @@
     border: none;
     padding
 }
+
+.header-panel {
+  display: flex; /* Use flexbox for easy alignment */
+  justify-content: flex-end; /* Align items to the right */
+  align-items: center; /* Center vertically */
+  padding: 0px; /* Add some padding */
+  background-color: #031F4E;
+}
+
+.profile-icon {
+  width: 40px; /* Set the width of the icon */
+  height: 40px; /* Set the height of the icon */
+  cursor: pointer; /* Change cursor to pointer on hover */
+  margin-right: 10px; 
+}
+
+.profile-icon:hover {
+  opacity: 0.8; /* Change opacity on hover for a slight effect */
+}
+
+
     </style>
 </head>
 <body>
-
 <div class="header-panel">
-</div>
+        <a href="admin_profile.php">
+            <img src="pics/icons8-test-account-100.png" alt="Profile Icon" class="profile-icon">
+        </a>
+    </div>
 
 
 <div id="sideMenu" class="side-menu">
@@ -438,18 +462,7 @@
 
 <?php
 // Database configuration
-$servername = "localhost";
-$username = "root";
-$password = "";
-$dbname = "bangketicketdb";
-
-// Create connection
-$conn = new mysqli($servername, $username, $password, $dbname);
-
-// Check connection
-if ($conn->connect_error) {
-    die("Connection failed: " . $conn->connect_error);
-}
+include 'config.php';
 
 // Handle filtering by vendor ID or vendor name
 $filter_type = isset($_POST['filter_type']) ? $_POST['filter_type'] : '';

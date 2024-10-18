@@ -1,18 +1,6 @@
 <?php
 // Database connection
-$servername = "localhost";
-$username = "root";
-$password = "";
-$dbname = "bangketicketdb";
-
-// Create connection
-$conn = new mysqli($servername, $username, $password, $dbname);
-
-// Check connection
-if ($conn->connect_error) {
-    die(json_encode(['success' => false, 'message' => 'Database connection failed.']));
-}
-
+include 'config.php';
 // Handle password reset request
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['new_password'])) {
     // Get the new password from the request

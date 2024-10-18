@@ -8,12 +8,24 @@ $vendorID = isset($_GET['id']) ? $conn->real_escape_string($_GET['id']) : '';
 if (empty($vendorID)) {
     die("<p>No vendor ID provided.</p>");
 }
+// Query to fetch the vendor's full name based on the vendorID
+$vendorQuery = "SELECT fname, lname, mname FROM vendor_list WHERE vendorID = '$vendorID'";
+$vendorResult = $conn->query($vendorQuery);
+
+// Check if a vendor was found
+if ($vendorResult && $vendorResult->num_rows > 0) {
+    $vendorRow = $vendorResult->fetch_assoc();
+    $vendorFullName = htmlspecialchars($vendorRow['lname']) . ', ' . htmlspecialchars($vendorRow['fname']) . ' ' . htmlspecialchars($vendorRow['mname']);
+} else {
+    $vendorFullName = 'Unknown Vendor';
+}
 
 // Query to fetch transactions for the specific vendorID
-$sql = "SELECT transactionID, date, amount 
-        FROM vendor_transaction 
-        WHERE vendorID = '$vendorID' 
-        ORDER BY date;";
+$sql = "SELECT t.transactionID, t.date, t.amount, c.fname AS collector_fname, c.lname AS collector_lname
+        FROM vendor_transaction t
+        JOIN collectors c ON t.collector_id = c.collector_id
+        WHERE t.vendorID = '$vendorID'
+        ORDER BY t.date;";
 
 $result = $conn->query($sql);
 
@@ -26,11 +38,9 @@ ob_start();
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="icon" href="pics/logo-bt.png">
-    <title>BangkeTicket</title>
     <style>
         body {
-            font-family: "Times New Roman", Georgia, serif; 
+            font-family: "Times New Roman", Georgia, serif;
             margin: 0;
             padding: 0;
             background-color: #f9f9f9;
@@ -38,51 +48,70 @@ ob_start();
 
         .table-header {
             display: flex;
-            justify-content: space-between; /* Align title and logo on opposite sides */
+            justify-content: space-between;
             align-items: center;
-            width: 85%; /* Same width as table for consistency */
+            width: 85%;
             max-width: 1000px;
-            margin: 0 auto; /* Center the header */
-            padding: 10px 0; /* Padding above and below the header */
+            margin: 0 auto;
+            padding: 10px 0;
+        }
+
+        /* Container to hold both text and logo */
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            text-align: right;
+        }
+
+        .gov-text {
+            font-size: 18px;
+            line-height: 1.2;
+        }
+
+        .gov-text hr {
+            margin: 5px 0;
+            border: none;
+            border-top: 1px solid #000;
+        }
+
+        .logo img {
+            max-height: 110px;
+            max-width: 110px;
         }
 
         .vendor-title {
             text-align: left;
-            font-size: 26px; /* Larger title size for high-res screens */
+            font-size: 26px;
             font-weight: bold;
-            margin-left: 20px; /* Added margin to prevent overlap */
         }
 
-        .logo {
-            text-align: right;
-        }
-
-        .logo img {
-            max-height: 90px; /* Slightly larger logo for high-res screens */
-            max-width: 90px;
+        .vendor-name {
+            font-weight: normal; /* Make the vendor name not bold */
         }
 
         .container {
             display: flex;
             justify-content: center;
             padding: 20px;
-            width: 100%;
+            margin: auto;
+            width: 90%;
         }
 
         table {
-            width: 85%; /* Wider table for desktop */
-            max-width: 1000px; /* Adjust max width for desktop */
+            width: 85%;
+            max-width: 1000px;
             border-collapse: collapse;
             background-color: white;
-            font-size: 18px; /* Larger font size for readability on high-res screens */
+            font-size: 18px;
             margin: 0 auto;
         }
 
         th, td {
-            padding: 12px; /* Increased padding for desktop */
+            padding: 12px;
             text-align: left;
             border-bottom: 1px solid #ddd;
-            font-size: 18px; /* Match table font size */
+            font-size: 18px;
         }
 
         th {
@@ -103,10 +132,9 @@ ob_start();
         }
 
         /* Media Queries for responsiveness */
-        @media only screen and (max-width: 1280px) { /* For larger devices like tablets */
+        @media only screen and (max-width: 1280px) {
             .vendor-title {
                 font-size: 24px;
-                margin-left: 15px;
             }
 
             table {
@@ -121,12 +149,15 @@ ob_start();
                 max-height: 80px;
                 max-width: 80px;
             }
+
+            .gov-text {
+                font-size: 16px;
+            }
         }
 
         @media only screen and (max-width: 1024px) {
             .vendor-title {
                 font-size: 22px;
-                margin-left: 10px; /* Adjust margin for smaller screens */
             }
 
             table {
@@ -146,12 +177,15 @@ ob_start();
             .table-header {
                 width: 90%;
             }
+
+            .gov-text {
+                font-size: 15px;
+            }
         }
 
-        @media only screen and (max-width: 768px) { /* For newer smartphones and medium-sized devices */
+        @media only screen and (max-width: 768px) {
             .vendor-title {
                 font-size: 20px;
-                margin-left: 10px; /* Adjust margin for smaller screens */
             }
 
             table {
@@ -172,12 +206,15 @@ ob_start();
                 width: 100%;
                 padding: 0 10px;
             }
+
+            .gov-text {
+                font-size: 14px;
+            }
         }
 
-        @media only screen and (max-width: 480px) { /* For smaller smartphones */
+        @media only screen and (max-width: 480px) {
             .vendor-title {
                 font-size: 18px;
-                margin-left: 5px; /* Adjust margin for small screens */
             }
 
             table {
@@ -199,12 +236,12 @@ ob_start();
                 padding: 0 5px;
             }
 
-            .container {
-                padding: 10px;
+            .gov-text {
+                font-size: 13px;
             }
         }
 
-        @media only screen and (max-width: 360px) { /* For very small screens */
+        @media only screen and (max-width: 360px) {
             .vendor-title {
                 font-size: 16px;
             }
@@ -221,19 +258,29 @@ ob_start();
                 max-height: 40px;
                 max-width: 40px;
             }
+
+            .gov-text {
+                font-size: 12px;
+            }
         }
     </style>
 </head>
 <body>
 
-<!-- Table header with title and logo aligned to edges -->
+<!-- Table header with title, text, and logo aligned -->
 <div class="table-header">
     <div class="vendor-title">
-        Transaction History <br> Vendor ID: <?php echo htmlspecialchars($vendorID); ?>
+        Transaction History <br> Vendor: <span class="vendor-name"><?php echo htmlspecialchars($vendorFullName); ?></span>
     </div>
-    <div class="logo">
-        <!-- Replace with the actual logo image -->
-        <img src="pics/malolos-logo.png" alt="Logo">
+    <div class="header-right">
+        <div class="gov-text">
+            Republika ng Pilipinas <br>
+            <hr>
+            Pamahalaang Lungsod ng Malolos
+        </div>
+        <div class="logo">
+            <img src="pics/malolos33.png" alt="Logo">
+        </div>
     </div>
 </div>
 
@@ -244,20 +291,26 @@ ob_start();
                 <th>Transaction ID</th>
                 <th>Transaction Date</th>
                 <th>Amount</th>
+                <th>Collector</th>
             </tr>
         </thead>
         <tbody>
             <?php if ($result && $result->num_rows > 0) {
-                while ($row = $result->fetch_assoc()) { ?>
+               while ($row = $result->fetch_assoc()) {
+                $collectorFullName = isset($row["collector_fname"], $row["collector_lname"]) 
+                    ? htmlspecialchars($row["collector_fname"]) . ' ' . htmlspecialchars($row["collector_lname"])
+                    : 'N/A'; 
+                    ?>
                     <tr>
                         <td><?php echo htmlspecialchars($row["transactionID"]); ?></td>
                         <td><?php echo htmlspecialchars($row["date"]); ?></td>
                         <td>₱<?php echo number_format($row["amount"], 2); ?></td>
+                        <td><?php echo $collectorFullName; ?></td>
                     </tr>
                 <?php }
             } else { ?>
                 <tr>
-                    <td colspan="3">No transactions found for this vendor.</td>
+                    <td colspan="4">No transactions found for this vendor.</td>
                 </tr>
             <?php } ?>
         </tbody>

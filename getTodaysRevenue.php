@@ -4,18 +4,7 @@ ini_set('display_errors', 1);
 error_reporting(E_ALL);
 
 // Database configuration
-$servername = "localhost";
-$username = "root";  // Adjust as per your DB configuration
-$password = "";
-$dbname = "bangketicketdb";  // Ensure this is your correct DB name
-
-// Create connection
-$conn = new mysqli($servername, $username, $password, $dbname);
-
-// Check connection
-if ($conn->connect_error) {
-    die("Connection failed: " . $conn->connect_error);
-}
+include 'config.php';
 
 // Query to sum today's revenue
 $sql = "SELECT SUM(amount) as totalRevenue FROM vendor_transaction WHERE DATE(date) = CURDATE()";

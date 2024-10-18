@@ -1,17 +1,6 @@
 <?php
 // Database connection
-$servername = "localhost"; // Change if needed
-$username = "root"; // Change if needed
-$password = ""; // Change if needed
-$dbname = "bangketicketdb"; // Change this to your database name
-
-// Create connection
-$conn = new mysqli($servername, $username, $password, $dbname);
-
-// Check connection
-if ($conn->connect_error) {
-    die("Connection failed: " . $conn->connect_error);
-}
+include 'config.php';
 
 // SQL query to get data from the archive_collectors table
 $sql = "SELECT collector_id, fname AS first_name, mname AS middle_name, lname AS last_name, suffix, birthday FROM archive_collectors";
@@ -99,6 +88,7 @@ $archivedCollectorsResult = $conn->query("SELECT * FROM archive_collectors ORDER
 .side-menu a:hover {
     background-color: #2A416F;
     color: #fff;
+    transform: translateX(10px); /* Slide to the right on hover */
    
 }
 
@@ -203,7 +193,7 @@ $archivedCollectorsResult = $conn->query("SELECT * FROM archive_collectors ORDER
         }
 
         .panel h2 {
-            margin-top: 0;
+            margin-top: 50;
             color: black;
         }
 
@@ -300,17 +290,55 @@ $archivedCollectorsResult = $conn->query("SELECT * FROM archive_collectors ORDER
     color: #fff; /* Ensure text color remains white */
     transform: scale(1.05); /* Slightly enlarge the button on hover */
 }
+.header-panel {
+  display: flex; /* Use flexbox for easy alignment */
+  justify-content: flex-end; /* Align items to the right */
+  align-items: center; /* Center vertically */
+  padding: 0px; /* Add some padding */
+  background-color: #031F4E;
+}
+
+.profile-icon {
+  width: 40px; /* Set the width of the icon */
+  height: 40px; /* Set the height of the icon */
+  cursor: pointer; /* Change cursor to pointer on hover */
+  margin-right: 10px; /* Space between the icon and the edge */
+}
+
+.profile-icon:hover {
+  opacity: 0.8; /* Change opacity on hover for a slight effect */
+}
+.back-button {
+   
+    color: black; /* White text */
+    padding: 10px 15px; /* Padding for the button */
+    border: none; /* No border */
+    border-radius: 5px; /* Rounded corners */
+    text-decoration: none; /* Remove underline */
+    cursor: pointer; /* Pointer cursor */
+    transition: background-color 0.3s ease; /* Smooth transition */
+    display: flex; /* Use flexbox for alignment */
+    align-items: center; /* Center items vertically */
+}
+
+.back-button i {
+    margin-right: 8px; /* Space between icon and text */
+}
+
+.back-button:hover {
+    background-color: #6B8CAE; /* Darker grey on hover */
+}
+
 
     </style>
 </head>
 <body>
 
 <div class="header-panel">
-    <div class="notification"><i class="fas fa-bell"></i></div>
-    <div class="profile-container">
-      <img src="pics/admin.jfif" alt="Profile Picture" class="profile-picture">
+        <a href="admin_profile.php">
+            <img src="pics/icons8-test-account-100.png" alt="Profile Icon" class="profile-icon">
+        </a>
     </div>
-</div>
 
 <div id="sideMenu" class="side-menu">
     <div class="logo">
@@ -342,17 +370,24 @@ $archivedCollectorsResult = $conn->query("SELECT * FROM archive_collectors ORDER
       <a href="index.html" class="logout"><i class="fas fa-sign-out-alt"></i> Log Out</a>
 </div>
 
-<div class="main">
-<div class="panel">
-    <div class="heading-with-button">
-        <h2>Archive Collectors</h2>
-        <!-- Export to CSV button aligned to the right -->
-        <a href="export_collectors_csv.php" class="export-btn">
-    Export
-    <img src="pics/icons8-export-csv-80.png" alt="Export CSV Icon" style="width: 20px; height: 20px; margin-left: 8px;">
-</a>
 
-    </div>
+<div class="main">
+    <div class="panel">
+        <div class="heading-with-button">
+        <a href="archive.php" class="back-button">
+                <i class="fas fa-arrow-left"></i> <!-- Back arrow icon -->
+                
+            </a> 
+            <h2>Archive Collectors</h2>
+            <!-- Export to CSV button aligned to the right -->
+            <a href="export_collectors_csv.php" class="export-btn">
+                Export
+                <img src="pics/icons8-export-csv-80.png" alt="Export CSV Icon" style="width: 20px; height: 20px; margin-left: 8px;">
+            </a>
+        </div>
+
+
+
 
     <table class="collector-table">
     <thead>

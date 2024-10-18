@@ -100,7 +100,7 @@ $archivedVendorsResult = $conn->query("SELECT * FROM archive_vendors ORDER BY ve
         .side-menu a:hover {
             background-color: #2A416F;
             color: #fff;
-            
+            transform: translateX(10px); /* Slide to the right on hover */
         }
 
 
@@ -212,6 +212,7 @@ $archivedVendorsResult = $conn->query("SELECT * FROM archive_vendors ORDER BY ve
     min-height: 100vh; /* Ensure full height */
     box-sizing: border-box;
     overflow-x: hidden; /* Prevent horizontal scrolling */
+    overflow-y: hidden;
 }
 
 /* Style for the heading section */
@@ -294,6 +295,18 @@ $archivedVendorsResult = $conn->query("SELECT * FROM archive_vendors ORDER BY ve
 }
 
 /* Unique styles for the custom dropdown */
+.custom-dropdown-btn {
+    background-color: transparent; /* Initial background color */
+    border: none; /* Remove border */
+    cursor: pointer; /* Change cursor to pointer on hover */
+    transition: background-color 0.3s ease, transform 0.3s ease; /* Smooth transition for hover effects */
+}
+
+.custom-dropdown-btn:hover {
+    background-color: rgba(3, 31, 78, 0.1); /* Light background color on hover */
+    transform: scale(1.05); /* Slightly enlarge the button */
+}
+
 .custom-dropdown {
     position: relative;
     display: inline-block;
@@ -317,6 +330,7 @@ $archivedVendorsResult = $conn->query("SELECT * FROM archive_vendors ORDER BY ve
 .custom-dropdown-btn i {
     font-size: 16px;
 }
+
 
 .custom-dropdown-container {
     display: none;
@@ -619,12 +633,35 @@ $archivedVendorsResult = $conn->query("SELECT * FROM archive_vendors ORDER BY ve
     color: #fff; /* Ensure text color remains white */
     transform: scale(1.05); /* Slightly enlarge the button on hover */
 }
+.header-panel {
+    display: flex; /* Use flexbox for easy alignment */
+    justify-content: flex-end; /* Align items to the right */
+    align-items: center; /* Center vertically */
+    padding: 0px; /* Add some padding */
+    background-color: #031F4E;
+}
+
+.profile-icon {
+    width: 40px; /* Set the width of the icon */
+    height: 40px; /* Set the height of the icon */
+    cursor: pointer; /* Change cursor to pointer on hover */
+    margin-right: 10px; /* Space between the icon and the edge */
+}
+
+.profile-icon:hover {
+    opacity: 0.8; /* Change opacity on hover for a slight effect */
+}
+
 
     </style>
 </head>
 <body>
 
-<div class="header-panel"></div>
+<div class="header-panel">
+        <a href="admin_profile.php">
+            <img src="pics/icons8-test-account-100.png" alt="Profile Icon" class="profile-icon">
+        </a>
+    </div>
 
 <div id="sideMenu" class="side-menu">
     <div class="logo">

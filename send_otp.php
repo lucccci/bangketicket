@@ -5,18 +5,7 @@ use PHPMailer\PHPMailer\Exception;
 require 'vendor/autoload.php'; // Ensure PHPMailer is installed via Composer
 
 // Database connection
-$servername = "localhost";
-$username = "root"; 
-$password = ""; 
-$dbname = "bangketicketdb";
-
-// Create connection
-$conn = new mysqli($servername, $username, $password, $dbname);
-
-// Check connection
-if ($conn->connect_error) {
-    die(json_encode(['success' => false, 'message' => 'Database connection failed.']));
-}
+include 'config.php';
 
 // Function to generate OTP
 function generateOTP() {

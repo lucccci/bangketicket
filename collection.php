@@ -1,17 +1,6 @@
 <?php
 // Database connection
-$servername = "localhost";
-$username = "root"; // Adjust according to your database username
-$password = "";     // Adjust according to your database password
-$dbname = "bangketicketdb"; // Replace with your actual database name
-
-// Create connection
-$conn = new mysqli($servername, $username, $password, $dbname);
-
-// Check connection
-if ($conn->connect_error) {
-    die("Connection failed: " . $conn->connect_error);
-}
+include 'config.php';
 
 // Handle filtering by vendor ID, vendor name, or collector ID
 $filter_type = isset($_POST['filter_type']) ? $_POST['filter_type'] : '';
@@ -460,11 +449,35 @@ $collectorResult = $conn->query($collectorQuery);
     background-color: #16283f; /* Even darker color when clicked */
 }
 
+.header-panel {
+  display: flex; /* Use flexbox for easy alignment */
+  justify-content: flex-end; /* Align items to the right */
+  align-items: center; /* Center vertically */
+  padding: 0px; /* Add some padding */
+  background-color: #031F4E;
+}
+
+.profile-icon {
+  width: 40px; /* Set the width of the icon */
+  height: 40px; /* Set the height of the icon */
+  cursor: pointer; /* Change cursor to pointer on hover */
+  margin-right: 10px; 
+}
+
+.profile-icon:hover {
+  opacity: 0.8; /* Change opacity on hover for a slight effect */
+}
+
+
         
     </style>
 </head>
 <body>
-<div class="header-panel"></div>
+<div class="header-panel">
+        <a href="admin_profile.php">
+            <img src="pics/icons8-test-account-100.png" alt="Profile Icon" class="profile-icon">
+        </a>
+    </div>
 <!-- Side Menu -->
 <div id="sideMenu" class="side-menu">
     <div class="logo">

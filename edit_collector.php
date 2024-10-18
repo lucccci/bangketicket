@@ -1,18 +1,5 @@
 <?php
-// Database connection
-$servername = "localhost";
-$username = "root"; // Adjust according to your database username
-$password = "";     // Adjust according to your database password
-$dbname = "bangketicketdb"; // Replace with your actual database name
-
-// Create connection
-$conn = new mysqli($servername, $username, $password, $dbname);
-
-// Check connection
-if ($conn->connect_error) {
-    die("Connection failed: " . $conn->connect_error);
-}
-
+include 'config.php';
 // Check if form is submitted
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     // Get the form data

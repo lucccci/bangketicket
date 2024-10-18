@@ -74,6 +74,7 @@ body {
 .side-menu a:hover {
     background-color: #2A416F;
     color: #fff;
+    transform: translateX(10px); /* Slide to the right on hover */
  
 }
 
@@ -221,6 +222,25 @@ body {
 .usersTable tbody tr:hover {
     background-color: #f2f2f2;
 }
+.header-panel {
+    display: flex; /* Use flexbox for easy alignment */
+    justify-content: flex-end; /* Align items to the right */
+    align-items: center; /* Center vertically */
+    padding: 10px; /* Add some padding */
+    background-color: #031F4E;
+}
+
+.profile-icon {
+    width: 40px; /* Set the width of the icon */
+    height: 40px; /* Set the height of the icon */
+    cursor: pointer; /* Change cursor to pointer on hover */
+    margin-left: 20px; /* Space between the icon and the edge */
+}
+
+.profile-icon:hover {
+    opacity: 0.8; /* Change opacity on hover for a slight effect */
+}
+
 
 
   </style>
@@ -228,6 +248,11 @@ body {
 <body>
 
 <div class="header-panel">
+        <a href="admin_profile.php">
+            <img src="pics/icons8-test-account-100.png" alt="Profile Icon" class="profile-icon">
+        </a>
+    </div>
+    
   </div>
 
   <div id="sideMenu" class="side-menu">

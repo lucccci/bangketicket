@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -63,6 +64,7 @@ body {
 .side-menu a:hover {
     background-color: #2A416F;
     color: #fff;
+    transform: translateX(10px); /* Slide to the right on hover */
 }
 
 .side-menu a i {
@@ -206,6 +208,24 @@ body {
 @keyframes hideCursor {
     to { border-right: none; } /* This will remove the cursor after typing is done */
 }
+.header-panel {
+    display: flex; /* Use flexbox for easy alignment */
+    justify-content: flex-end; /* Align items to the right */
+    align-items: center; /* Center vertically */
+    padding: 10px; /* Add some padding */
+    background-color: #031F4E;
+}
+
+.profile-icon {
+    width: 40px; /* Set the width of the icon */
+    height: 40px; /* Set the height of the icon */
+    cursor: pointer; /* Change cursor to pointer on hover */
+    margin-left: 20px; /* Space between the icon and the edge */
+}
+
+.profile-icon:hover {
+    opacity: 0.8; /* Change opacity on hover for a slight effect */
+}
 
 
 
@@ -213,7 +233,12 @@ body {
 </head>
 <body>
 
-<div class="header-panel"></div>
+    <div class="header-panel">
+        <a href="admin_profile.php">
+            <img src="pics/icons8-test-account-100.png" alt="Profile Icon" class="profile-icon">
+        </a>
+    </div>
+    
 
 <div class="overlay" onclick="toggleDropdown()"></div>
 
@@ -264,13 +289,14 @@ body {
         </div>
         <div class="card">
             <div class="card-content">
-                <div class="number">0</div>
+                <div class="number" id="active-vendors">0</div>
                 <div class="card-name">Active Vendors</div>
             </div>
             <div class="icon-box">
                 <span class="material-icons" style="font-size: 45px;">people</span>
             </div>
         </div>
+        
     
         <div class="card">
             <div class="card-content">
@@ -355,6 +381,29 @@ document.getElementById('vendorDropdown').addEventListener('click', function(eve
     var dropdownContent = document.getElementById('vendorDropdownContent');
     dropdownContent.style.display = dropdownContent.style.display === 'none' || dropdownContent.style.display === '' ? 'block' : 'none';
 });
+
+// Function to fetch active vendor count and update the HTML
+function fetchActiveVendorCount() {
+    fetch('getActiveVendorCount.php')  
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.text();
+        })
+        .then(data => {
+            document.querySelector('.cards .card:nth-child(2) .number').textContent = data; // Update active vendors card
+        })
+        .catch(error => console.error('Error fetching active vendor count:', error));
+}
+
+// Ensure the function runs on page load
+window.onload = function() {
+    fetchVendorCount();
+    fetchTodaysRevenue();
+    fetchActiveVendorCount(); // Add this line
+};
+
 </script>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>

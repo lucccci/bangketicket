@@ -1,20 +1,6 @@
 <?php
 // collector.php
-
-// Database connection parameters
-$servername = "localhost";
-$username = "root"; // Adjust according to your database username
-$password = "";     // Adjust according to your database password
-$dbname = "bangketicketdb"; // Replace with your actual database name
-
-// Create connection
-$conn = new mysqli($servername, $username, $password, $dbname);
-
-// Check connection
-if ($conn->connect_error) {
-    die("Connection failed: " . $conn->connect_error);
-}
-
+include 'config.php';
 // Enable error reporting for MySQLi
 mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 
@@ -225,6 +211,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     .side-menu a:hover {
         background-color: #2A416F;
         color: #fff;
+        transform: translateX(10px); /* Slide to the right on hover */
     }
 
     .side-menu a i {

@@ -10,17 +10,7 @@ require 'path_to_phpmailer/SMTP.php';
 require 'path_to_phpmailer/Exception.php';
 
 // Database connection
-$servername = "localhost";
-$db_username = "root"; // Replace with your DB username
-$db_password = ""; // Replace with your DB password
-$dbname = "bangketicketdb"; // Replace with your DB name
-
-$conn = new mysqli($servername, $db_username, $db_password, $dbname);
-
-// Check connection
-if ($conn->connect_error) {
-    die("Connection failed: " . $conn->connect_error);
-}
+include 'config.php';
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $email = $_POST['email'];
