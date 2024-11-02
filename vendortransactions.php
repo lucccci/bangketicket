@@ -38,6 +38,8 @@ ob_start();
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="pics/logo-bt.png">
+    <title>Transactions History</title>
     <style>
         body {
             font-family: "Times New Roman", Georgia, serif;
@@ -46,6 +48,7 @@ ob_start();
             background-color: #f9f9f9;
         }
 
+        /* Header styling */
         .table-header {
             display: flex;
             justify-content: space-between;
@@ -55,18 +58,18 @@ ob_start();
             margin: 0 auto;
             padding: 10px 0;
         }
-
-        /* Container to hold both text and logo */
+        
+        /* Align text and logo closer together */
         .header-right {
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 5px; /* Reduced gap */
             text-align: right;
         }
-
+        
         .gov-text {
-            font-size: 18px;
-            line-height: 1.2;
+            font-size: 18px; /* Smaller text */
+            line-height: 1.1; /* Adjust line height */
         }
 
         .gov-text hr {
@@ -76,8 +79,8 @@ ob_start();
         }
 
         .logo img {
-            max-height: 110px;
-            max-width: 110px;
+            max-height: 160px; /* Increase size of the logo */
+            max-width: 160px;
         }
 
         .vendor-title {
@@ -105,6 +108,7 @@ ob_start();
             background-color: white;
             font-size: 18px;
             margin: 0 auto;
+            table-layout: fixed; /* Fix table layout for better spacing */
         }
 
         th, td {
@@ -130,139 +134,117 @@ ob_start();
         tr:nth-child(odd) {
             background-color: #fff;
         }
-
-        /* Media Queries for responsiveness */
-        @media only screen and (max-width: 1280px) {
-            .vendor-title {
-                font-size: 24px;
-            }
-
-            table {
-                font-size: 16px;
-            }
-
-            th, td {
-                padding: 10px;
-            }
-
-            .logo img {
-                max-height: 80px;
-                max-width: 80px;
-            }
-
-            .gov-text {
-                font-size: 16px;
-            }
-        }
-
+        
+        /* Media Queries for responsive behavior */
         @media only screen and (max-width: 1024px) {
             .vendor-title {
                 font-size: 22px;
             }
-
+        
             table {
                 font-size: 15px;
                 width: 90%;
             }
-
+        
             th, td {
-                padding: 9px;
+                padding: 10px;
             }
-
+        
             .logo img {
-                max-height: 70px;
-                max-width: 70px;
+                max-height: 130px;
+                max-width: 130px;
             }
-
+        
+            .gov-text {
+                font-size: 12px;
+            }
+        
             .table-header {
                 width: 90%;
-            }
-
-            .gov-text {
-                font-size: 15px;
             }
         }
 
         @media only screen and (max-width: 768px) {
             .vendor-title {
-                font-size: 20px;
+                font-size: 16px;
             }
-
+        
             table {
                 font-size: 14px;
                 width: 100%;
             }
-
+        
             th, td {
                 padding: 8px;
+                font-size: 14px;
             }
-
+        
             .logo img {
-                max-height: 60px;
-                max-width: 60px;
+                max-height: 100px;
+                max-width: 100px;
             }
-
+        
             .table-header {
                 width: 100%;
                 padding: 0 10px;
             }
-
+        
             .gov-text {
-                font-size: 14px;
+                display: none;
             }
         }
 
+        /* Main adjustments for smaller screens */
         @media only screen and (max-width: 480px) {
             .vendor-title {
-                font-size: 18px;
+                font-size: 14px;
             }
-
+        
             table {
-                font-size: 13px;
+                font-size: 12px;
                 width: 100%;
             }
-
+        
             th, td {
-                padding: 7px;
+                padding: 6px;
+                font-size: 12px; /* Smaller text */
             }
-
+        
             .logo img {
-                max-height: 50px;
-                max-width: 50px;
+                max-height: 100px;
+                max-width: 100px;
             }
-
+        
             .table-header {
                 width: 100%;
                 padding: 0 5px;
             }
 
             .gov-text {
-                font-size: 13px;
+                display: none;
             }
         }
 
         @media only screen and (max-width: 360px) {
             .vendor-title {
-                font-size: 16px;
+                font-size: 12px;
             }
-
+        
             table {
-                font-size: 12px;
+                font-size: 11px;
             }
-
+        
             th, td {
-                padding: 6px;
+                padding: 5px;
+                font-size: 11px;
             }
-
+        
             .logo img {
-                max-height: 40px;
-                max-width: 40px;
-            }
-
-            .gov-text {
-                font-size: 12px;
+                max-height: 100px;
+                max-width: 100px;
             }
         }
+
     </style>
 </head>
 <body>

@@ -16,95 +16,80 @@ if (isset($_REQUEST['sbt-btn'])) {
   $birthday = $_REQUEST['birthday'];
   $age = !empty($_REQUEST['age']) ? $_REQUEST['age'] : 'N/A';
   $contactNo = !empty($_REQUEST['contactNo']) ? $_REQUEST['contactNo'] : 'N/A';
-  $province = $_REQUEST['province'];
-  $municipality = $_REQUEST['city'];
-  $barangay = $_REQUEST['barangay'];
+  $lotArea = $_REQUEST['lotArea'];
+    // Get the text values instead of the codes
+    $province = $_REQUEST['provinceText'];
+    $municipality = $_REQUEST['cityText'];
+    $barangay = $_REQUEST['barangayText'];
   $houseNo = $_REQUEST['houseNumber'];
   $streetname = $_REQUEST['streetName'];
 
   // Fetch the current last used ID from the sequence table
   $result = mysqli_query($conn, "SELECT last_used_id FROM vendor_id_sequence LIMIT 1");
   $row = mysqli_fetch_assoc($result);
+
+  if ($row) {
+      // Increment the last used ID
+      $newID = (int)$row['last_used_id'] + 1;
+
+      // Update the sequence table with the new last used ID
+      mysqli_query($conn, "UPDATE vendor_id_sequence SET last_used_id = $newID");
+  } else {
+      // Start with 1 if there are no existing IDs
+      $newID = 1;
+      mysqli_query($conn, "INSERT INTO vendor_id_sequence (last_used_id) VALUES (1)");
+  }
+
+  // Format the new vendorID with leading zeros (e.g., BTV-001, BTV-002)
+  $formattedID = 'BTV-' . str_pad($newID, 3, '0', STR_PAD_LEFT);
+
+  // Check if the generated ID already exists in the vendor_list
+  $checkIDQuery = mysqli_query($conn, "SELECT vendorID FROM vendor_list WHERE vendorID = '$formattedID'");
     
-    if ($row) {
-        // Increment the last used ID
-        $newID = (int)$row['last_used_id'] + 1;
+  // If the ID exists, increment until a unique ID is found
+  while (mysqli_num_rows($checkIDQuery) > 0) {
+      $newID++;
+      $formattedID = 'BTV-' . str_pad($newID, 3, '0', STR_PAD_LEFT);
+      $checkIDQuery = mysqli_query($conn, "SELECT vendorID FROM vendor_list WHERE vendorID = '$formattedID'");
+  }
 
-        // Update the sequence table with the new last used ID
-        mysqli_query($conn, "UPDATE vendor_id_sequence SET last_used_id = $newID");
-    } else {
-        // Start with 1 if there are no existing IDs
-        $newID = 1;
-        mysqli_query($conn, "INSERT INTO vendor_id_sequence (last_used_id) VALUES (1)");
-    }
+  // Insert the new vendor record with the formatted vendorID
+  $query = mysqli_query($conn, "INSERT INTO vendor_list SET 
+                                vendorID='$formattedID', 
+                                fName='$fName', 
+                                mname='$mname', 
+                                lName='$lName', 
+                                suffix='$suffix', 
+                                gender='$gender', 
+                                birthday='$birthday', 
+                                age='$age', 
+                                contactNo='$contactNo', 
+                                lotArea='$lotArea',
+                                province='$province', 
+                                municipality='$municipality', 
+                                barangay='$barangay', 
+                                houseNo='$houseNo', 
+                                streetname='$streetname'");
 
-    // Format the new vendorID with leading zeros (e.g., BTV-001, BTV-002)
-    $formattedID = 'BTV-' . str_pad($newID, 3, '0', STR_PAD_LEFT);
+  if ($query) {
+      // Update the QR code generation to use the new vendorID
+      $data = "Vendor ID: $formattedID\nTransactions: https://bangketicket.online/vendortransactions.php?id=$formattedID";
+      $updateQuery = mysqli_query($conn, "UPDATE vendor_list SET qrimage='$qrimage' WHERE vendorID='$formattedID'");
 
-    // Check if the generated ID already exists in the vendor_list
-    $checkIDQuery = mysqli_query($conn, "SELECT vendorID FROM vendor_list WHERE vendorID = '$formattedID'");
-    
-    // If the ID exists, increment until a unique ID is found
-    while (mysqli_num_rows($checkIDQuery) > 0) {
-        $newID++;
-        $formattedID = 'BTV-' . str_pad($newID, 3, '0', STR_PAD_LEFT);
-        $checkIDQuery = mysqli_query($conn, "SELECT vendorID FROM vendor_list WHERE vendorID = '$formattedID'");
-    }
+      QRcode::png($data, $vendor_list, 'H', 4, 4);
 
-    // Insert the new vendor record with the formatted vendorID
-    $query = mysqli_query($conn, "INSERT INTO vendor_list SET 
-                                  vendorID='$formattedID', 
-                                  fName='$fName', 
-                                  mname='$mname', 
-                                  lName='$lName', 
-                                  suffix='$suffix', 
-                                  gender='$gender', 
-                                  birthday='$birthday', 
-                                  age='$age', 
-                                  contactNo='$contactNo', 
-                                  province='$province', 
-                                  municipality='$municipality', 
-                                  barangay='$barangay', 
-                                  houseNo='$houseNo', 
-                                  streetname='$streetname'");
-
-    if ($query) {
-        // Update the QR code generation to use the new vendorID
-        $data = "Vendor ID: $formattedID\nTransactions: https://bangketicket.online/vendortransactions.php?id=$formattedID";
-        $updateQuery = mysqli_query($conn, "UPDATE vendor_list SET qrimage='$qrimage' WHERE vendorID='$formattedID'");
-
-        ?>
-       ?>
-       <?php
-    if ($query) {
-        // Show success modal instead of alert
-        echo '<script>
-            window.onload = function() {
-                document.getElementById("successModal").style.display = "block";
-            };
-        </script>';
-    }
-?>
-
-<?php
-
-    } else {
-        echo "<p>Error saving data.</p>";
-    }
-
-    QRcode::png($data, $vendor_list, 'H', 4, 4);
-
-    // Display the QR code inside a modal
-    echo '<div id="myModal" class="modal">';
-    echo '<div class="modal-content">';
-    echo '<span class="close">&times;</span>';
-    echo '<img src="' . $vendor_list . '" alt="QR Code">';
-    echo '<button id="printButton" onclick="printQR()">Print QR Code</button>'; // Print QR Code button
-    echo '</div>';
-    echo '</div>';
+       // Pass a success flag as a query parameter
+       header("Location: vendorform.php?success=1");
+       exit(); // Ensure the script stops executing after the redirection
+   }
 }
+// Fetch admin details
+$sql = "SELECT profile_pic FROM admin_account LIMIT 1";
+$result = $conn->query($sql);
+$admin = $result->fetch_assoc();
+$defaultProfilePic = 'uploads/9131529.png'; // Default profile picture path
+$adminProfilePic = !empty($admin['profile_pic']) ? $admin['profile_pic'] : $defaultProfilePic;
 ?>
-
 
 
 <!DOCTYPE html>
@@ -114,7 +99,6 @@ if (isset($_REQUEST['sbt-btn'])) {
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
   <link rel="icon" href="pics/logo-bt.png">
   <link rel="stylesheet" href="menuheader.css">
-  <link rel="stylesheet" href="vendorform.css">
   <link rel="stylesheet" href="logo.css">
   
   
@@ -123,81 +107,94 @@ if (isset($_REQUEST['sbt-btn'])) {
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Add Vendor</title>
   <style>
-        /* Sidebar */
-.side-menu {
-    width: 260px;
-    height: 100vh;
-    background-color: #fff;
-    color: #031F4E;
-    position: fixed;
-    top: 0;
-    left: 0;
-    z-index: 1000;
-    overflow-y: hidden;
-    overflow-x:hidden;
-    transition: width 0.3s;
-    padding: 2px;
-}
-
-.side-menu .logo {
-    text-align: center;
-    padding: 20px;
-}
-
-.side-menu .logo img {
-    max-width: 100%;
-    height: auto;
-}
-
-.side-menu a {
-    display: flex;
-    align-items: center;
-    padding: 15px 20px;
-    color: #031F4E;
-    text-decoration: none;
-    transition: background 0.3s ease, color 0.3s ease, transform 0.2s ease-in-out; /* Smooth transitions for hover */
-}
-
-.side-menu a:hover {
-    background-color: #2A416F;
-    color: #fff;
-    transform: translateX(10px); /* Slide to the right on hover */
-}
-
-
-.side-menu a i {
-    margin-right: 10px;
-}
-
-.side-menu a.active {
-    background-color: #031F4E;
-    color: #fff;
-}
-
-.side-menu a.active i {
-    color: #fff;
-}
-
-.side-menu a:hover:not(.active) {
-    background-color: #2A416F;
-    color: #fff;
-}
-
-
-.logout {
-            color: #e74c3c; /* Log Out link color */
-            padding: 15px 20px; /* Padding for Log Out link */
-            margin-top: 115px; /* Add space above Log Out link */
-            display: flex; /* Ensure the icon and text align properly */
-            align-items: center; /* Center align the icon and text vertically */
-            transition: background 0.3s, color 0.3s; /* Transition effects */
-        }
-
-        .logout:hover {
-    background-color: #c0392b;
-    color: #fff;
-   
-}
+            * {
+                padding: 0;
+                margin: 0;
+                box-sizing: border-box;
+                font-family: 'Poppins', sans-serif;
+            }
+    
+            body {
+                margin: 0;
+                font-family: 'Poppins', sans-serif;
+                background-color: #F2F7FC;
+                position: relative;
+            }
+            /* Sidebar */
+            .side-menu {
+                display: flex;
+                flex-direction: column;
+                width: 260px;
+                height: 100vh;
+                background-color: #fff;
+                color: #031F4E;
+                position: fixed;
+                top: 0;
+                left: 0;
+                z-index: 1000;
+                overflow-y: hidden;
+                overflow-x: hidden;
+                padding: 2px;
+            }
+    
+            .side-menu .logo {
+                text-align: center;
+                padding: 20px;
+            }
+    
+            .side-menu .logo img {
+                max-width: 100%;
+                height: auto;
+            }
+    
+            .side-menu a {
+                display: flex;
+                align-items: center;
+                padding: 15px 20px;
+                color: #031F4E;
+                text-decoration: none;
+                transition: background 0.3s ease, color 0.3s ease, transform 0.2s ease-in-out;
+            }
+    
+            .side-menu a:hover {
+                background-color: #2A416F;
+                color: #fff;
+                transform: translateX(10px); /* Slide to the right on hover */
+            }
+    
+            .side-menu a i {
+                margin-right: 10px;
+            }
+    
+            .side-menu a.active {
+                background-color: #031F4E;
+                color: #fff;
+            }
+    
+            .side-menu a.active i {
+                color: #fff;
+            }
+    
+            .side-menu a:hover:not(.active) {
+                background-color: #2A416F;
+                color: #fff;
+            }
+    
+            .logout {
+                color: #e74c3c; 
+                padding: 15px 20px;
+                margin-top: 215px;
+                display: flex;
+                align-items: center;
+                transition: background 0.3s, color 0.3s;
+                transition: background 0.3s, color 0.3s;
+                margin-top: auto; /* Ensures logout stays at the bottom */
+            }
+    
+            .logout:hover {
+                background-color: #c0392b;
+                color: #fff;
+            }
         /* Set a fixed height for the dropdown and enable internal scrolling */
 .dropdown-content {
     display: none;
@@ -209,89 +206,27 @@ if (isset($_REQUEST['sbt-btn'])) {
     padding-right: 20px;
     border-left: 3px solid #031F4E;
 }
-
-  .back-button {
-    display: flex;
-    align-items: center; /* Align icon and text */
-    color: black;
-    border: none;
-    padding: 10px 20px;
-    font-size: 16px;
-    border-radius: 5px;
-    cursor: pointer;
-    text-decoration: none; /* Remove underline from text */
-    font-family: 'Arial', sans-serif;
+.back-button {
+   background-color:white;
+   color: black; /* White text */
+   padding: 10px 15px; /* Padding for the button */
+   border: none; /* No border */
+   border-radius: 5px; /* Rounded corners */
+   text-decoration: none; /* Remove underline */
+   cursor: pointer; /* Pointer cursor */
+   transition: background-color 0.3s ease; /* Smooth transition */
+   display: flex; /* Use flexbox for alignment */
+   align-items: center; /* Center items vertically */
 }
 
 .back-button i {
-    margin-right: 10px; /* Add space between icon and text */
+   margin-right: 8px; /* Space between icon and text */
 }
 
 .back-button:hover {
-    background-color: #6B8CAE; /* Darker grey on hover */
+   background-color: #6B8CAE; /* Darker grey on hover */
 }
 
-
-/* The successModal (background) */
-#successModal {
-    display: none; /* Hidden by default */
-    position: fixed; /* Stay in place */
-    z-index: 1000; /* Sit on top */
-    left: 0;
-    top: 0;
-    width: 100%; /* Full width */
-    height: 100%; /* Full height */
-    background-color: rgba(0, 0, 0, 0.4); /* Black w/ opacity */
-}
-
-/* successModal Content */
-#successModal .success-modal-content {
-    background-color: #fff;
-    margin: 15% auto;
-    padding: 20px;
-    border: 1px solid #888;
-    width: 80%;
-    max-width: 400px; /* Maximum width */
-    text-align: center;
-    border-radius: 8px;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-}
-
-/* Close button (X) */
-#successModal .success-close {
-    color: #aaa;
-    float: right;
-    font-size: 28px;
-    font-weight: bold;
-}
-
-#successModal .success-close:hover,
-#successModal .success-close:focus {
-    color: black;
-    text-decoration: none;
-    cursor: pointer;
-}
-
-/* OK button style */
-#successModal .success-modal-button {
-    padding: 10px 20px;
-    background-color: #031F4E;
-    color: white;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    margin-top: 10px;
-}
-
-#successModal .success-modal-button:hover {
-    background-color: #2A416F;
-}
-.success-message {
-    color: black; /* Change text color to red */
-    
-    font-size: 12px; /* Optional: increase the font size */
-    margin-top: 15px; /* Optional: add some spacing above */
-}
 .header-panel {
   display: flex; /* Use flexbox for easy alignment */
   justify-content: flex-end; /* Align items to the right */
@@ -310,17 +245,366 @@ if (isset($_REQUEST['sbt-btn'])) {
 .profile-icon:hover {
   opacity: 0.8; /* Change opacity on hover for a slight effect */
 }
+/* General Styles */
+body {
+    font-family: 'Poppins', sans-serif;
+    background-color: #F2F7FC; /* Light background for contrast */
+    margin: 0;
+    padding: 0;
+}
+
+/* Main Content Styles */
+.main-content {
+    margin-left: 260px; /* Space for the sidebar */
+    padding: 20px; /* General padding for main content */
+}
+
+/* Form Styles */
+.panel {
+    background-color: white; /* Ensure the panel has a white background */
+    border-radius: 8px; /* Rounded corners for aesthetics */
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1); /* Optional: add a shadow for depth */
+    padding: 20px; /* Add padding to prevent content from touching edges */
+    margin: 20px auto; /* Center the panel and add vertical spacing */
+    width: 90%; /* Adjust the width (e.g., 90% of the parent container) */
+    display: flex; /* Use flexbox for layout */
+    flex-direction: column; /* Stack elements vertically */
+    margin-top: 50px;
+}
+
+
+
+.header-container {
+    display: flex; /* Use flexbox for alignment */
+    align-items: center; /* Center items vertically */
+    justify-content: space-between; /* Space items evenly */
+    margin-bottom: 20px; /* Space below the header */
+}
+
+.back-button {
+    margin-right: 20px; /* Space to the right of the button */
+}
+
+/* Optional: Style for titles if you want to align them nicely */
+.header-titles {
+    flex-grow: 1; /* Allows the titles to take up remaining space */
+}
+
+.header-titles h2,
+.header-titles h1 {
+    margin: 0; /* Remove default margins */
+}
+
+.header-titles p{
+  font-weight: 300; 
+  font-size: .62rem;
+  color:red;
+}
+
+label {
+    margin-top: 20px;
+    font-weight: bold; /* Bold labels for clarity */
+}
+
+.address-heading {
+    padding: 2rem 0 0 0 ;
+}
+
+/* Specific Adjustments for Select Fields */
+select {
+    height: 42px; /* Ensure select fields have the same height */
+}
+
+input[type="submit"] {
+    background-color: #031F4E; /* Button color */
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    font-size: 14px; /* Decrease font size */
+}
+
+input[type="submit"]:hover {
+    background-color: #2A416F; /* Darker button color on hover */
+}
+
+/* General Input Styles */
+input[type="text"],
+input[type="number"],
+input[type="date"],
+select {
+    width: calc(100% - 20px); /* Full width minus padding */
+    padding: 10px; /* Consistent padding */
+    margin-top: 5px; /* Space above inputs */
+    border: 1px solid #ccc; /* Light border for inputs */
+    border-radius: 5px; /* Rounded corners */
+    font-size: 14px; /* Font size for readability */
+    box-sizing: border-box; /* Include padding and border in the element's total width and height */
+}
+
+/* Ensure consistent styles on focus */
+input:focus,
+select:focus {
+    border: 1px solid #031F4E; /* Change border color on focus */
+    outline: none; /* Remove default outline */
+}
+
+/* Phone Input Container Styles */
+.phone-input-container {
+    display: flex; /* Use flexbox for layout */
+    align-items: center; /* Center items vertically */
+    border: 1px solid #ccc; /* Light border */
+    border-radius: 5px; /* Rounded corners */
+    overflow: hidden; /* Prevent overflow */
+    width: calc(100% - 20px); /* Match other input widths */
+}
+
+.phone-input-container .country-code {
+    background-color: #f8f8f8; /* Background color for the flag area */
+    padding: 10px; /* Padding around the flag */
+    border-right: 1px solid #ccc; /* Divider between flag and input */
+    display: flex; /* Align items in the span */
+    align-items: center; /* Center align the flag and text */
+}
+
+.phone-input-container img {
+    width: 20px; /* Adjust the size of the flag */
+    height: 20px; /* Adjust the size of the flag */
+    margin-right: 5px; /* Space between flag and country code */
+}
+
+.phone-input-container input {
+    border: none; /* Remove border from input */
+    padding: 10px; /* Consistent padding */
+    font-size: 14px; /* Consistent font size */
+    width: 100%; /* Full width for the input field */
+}
+
+/* Focus Style for Phone Input */
+.phone-input-container input:focus {
+    border: none; /* Keep border none */
+    outline: none; /* Remove default outline */
+}
+
+.generate-qr-button {
+    display: block; /* Change to block to enable margin auto centering */
+    margin: 20px auto; /* Add vertical space and center horizontally */
+    padding: 10px 20px; /* Add padding for aesthetics */
+    background-color: #031F4E; /* Button background color */
+    color: white; /* Text color */
+    border: none; /* Remove border */
+    border-radius: 5px; /* Rounded corners */
+    font-size: 16px; /* Font size */
+    cursor: pointer; /* Pointer cursor on hover */
+    transition: background-color 0.3s ease; /* Smooth transition for hover */
+}
+
+.generate-qr-button:hover {
+    background-color: #2A416F; /* Darker shade on hover */
+}
+#userInfoForm {
+    background-color: white; /* White background for the form */
+    border-radius: 8px; /* Rounded corners */
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1); /* Subtle shadow for depth */
+    padding: 20px; /* Padding inside the form */
+    margin: -15px auto 20px auto; /* Center the form with margin */
+    width: 90%; /* Full width with a max limit */
+    max-width: 600px; /* Optional: limit maximum width for larger screens */
+    display: flex; /* Use flexbox for layout */
+    flex-direction: column; /* Stack elements vertically */
+    
+}
+
+/* Style for form labels */
+#userInfoForm label {
+    margin-bottom: 8px; /* Space between label and input */
+    font-weight: bold; /* Bold labels for clarity */
+    color: #333; /* Dark color for better readability */
+}
+
+/* Responsive Styles */
+@media (max-width: 768px) {
+    .main-content {
+        margin-left: 0; /* Remove left margin on smaller screens */
+        padding: 10px; /* Reduce padding */
+    }
+
+    .phone-input-container {
+        max-width: 100%; /* Allow phone input to be full width on small screens */
+    }
+}
+
+        .user-icon {
+    width: 40px; /* Set a fixed width for the icon */
+    height: 40px; /* Set a fixed height for the icon */
+    border-radius: 50%; /* Makes the icon circular */
+   margin-left: -55%; /* Aligns the icon in the header */
+    transition: transform 0.3s ease, box-shadow 0.3s ease; /* Smooth transition for the hover effect */
+}
+
+.user-icon:hover {
+    transform: scale(1.1); /* Slightly increase the size of the icon on hover */
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.2); /* Adds a shadow effect on hover */
+}
+
+/* Style for the Logout Modal */
+.logout-modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent background */
+    overflow: hidden;
+    animation: fadeIn 0.3s ease-out; /* Animation for the background */
+}
+
+.logout-modal-content {
+    background-color: white;
+    margin: 5% auto; /* Consistent margin to position it higher */
+    padding: 20px;
+    border: 1px solid #888;
+    width: 30%;
+    max-width: 400px;
+    border-radius: 8px;
+    position: relative;
+    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+    text-align: center;
+    transition: all 0.3s ease;
+    animation: slideDown 0.3s ease-out; /* Animation for the modal content */
+}
+
+.logout-modal h2 {
+    margin-top: 0;
+    font-size: 1.5rem;
+    color: #031F4E; /* Match the theme color */
+}
+
+.logout-modal p {
+    font-size: 1rem;
+    color: #333;
+    margin: 10px 0 20px;
+}
+
+.logout-modal .modal-actions button {
+    padding: 10px 20px;
+    margin: 0 5px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: all 0.3s ease;
+}
+
+.logout-modal .modal-actions button:first-child {
+    background-color: #031F4E;
+    color: #fff;
+}
+
+.logout-modal .modal-actions button:first-child:hover {
+    background-color: #2A416F;
+}
+
+.logout-modal .modal-actions button:last-child {
+    background-color: #ddd;
+    color: #333;
+}
+
+.logout-modal .modal-actions button:last-child:hover {
+    background-color: #bbb;
+}
+
+.logout-modal .close-logout-modal {
+    position: absolute;
+    top: 10px;
+    right: 15px;
+    font-size: 18px;
+    cursor: pointer;
+    color: #333;
+    background-color: transparent;
+    border: none;
+}
+.logout-modal .close-logout-modal:hover {
+    color: #f44336;
+}
+
+/* Keyframe animations */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-20px); /* Start slightly above */
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0); /* Slide into place */
+    }
+}
+/* Success Modal */
+.success-modal {
+    display: flex;
+    justify-content: center;
+    align-items: center; /* Center the modal vertically */
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent background */
+}
+
+/* Style the modal content */
+.success-modal-content {
+    background-color: white;
+    padding: 20px;
+    border-radius: 8px;
+    text-align: center;
+    width: 300px;
+    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+    margin-top:20%; /* Ensure the modal content is centered */
+    margin-left:43%;
+}
+
+.success-modal-content img {
+    width: 50px; /* Set width for the check gif */
+    height: 50px;
+}
+
+.success-modal-content h2 {
+    margin-top: 10px;
+    font-size: 1.2rem;
+    color: #031F4E;
+}
+    .required {
+        color: red;
+    }
+
+
 
   </style>
 </head>
 <body>
 
+  <div class="header-panel">
+    <div class="header-title"></div>
+    <a href="admin_profile.php">
+        <img src="<?php echo htmlspecialchars($adminProfilePic); ?>" alt="User Icon" class="user-icon" onerror="this.src='uploads/9131529.png'">
+    </a>
+</div>
 
-<div class="header-panel">
-        <a href="admin_profile.php">
-            <img src="pics/icons8-test-account-100.png" alt="Profile Icon" class="profile-icon">
-        </a>
-    </div>
 
 <div class="overlay"></div>
 
@@ -332,7 +616,7 @@ if (isset($_REQUEST['sbt-btn'])) {
     <div class="logo">
         <img src="pics/logo.png" alt="Logo">
     </div>
-    <a href="dashboard.html">
+    <a href="dashboard.php">
         <span class="material-icons" style="vertical-align: middle; font-size: 18px;">dashboard</span>
         <span style="margin-left: 8px;">Dashboard</span>
     </a>
@@ -352,7 +636,7 @@ if (isset($_REQUEST['sbt-btn'])) {
     <a href="collection.php"><i class="fa fa-table"></i> Collection</a>
     <a href="archive.php"><i class="fas fa-archive"></i> Archive</a>
 
-    <a href="index.html" class="logout"><i class="fas fa-sign-out-alt"></i> Log Out</a>
+    <a href="#" class="logout" onclick="openLogoutModal()"><i class="fas fa-sign-out-alt"></i> Log Out</a>
 </div>
 
 
@@ -363,24 +647,29 @@ if (isset($_REQUEST['sbt-btn'])) {
 
   <div class="panel">
     <br>
+    <div class="header-container">
     <button class="back-button" onclick="history.back()">
-    <i class="fas fa-arrow-left"></i>
-</button>
+        <i class="fas fa-arrow-left"></i>
+    </button>
+    
+    <div class="header-titles">
+        <h2>Vendor Registration Form</h2>
+        <p>Please fill up the form to register and get QR Code for Vendors</p>
+    </div>
+</div>
 
     <br>
     
-    <h2>Vendor Registration Form</h2>
-    <h5 class="personalinfo-heading">Personal Details</h5><br>
-    <br>
     <form id="userInfoForm" action="vendorform.php" method="POST">
+    <h1 class="personalinfo-heading">Personal Details</h1>
     
-<label for="firstName">First Name:</label>
-<input type="text" id="firstName" name="firstName" placeholder="Enter First Name" required>
+    <label for="firstName">First Name: <span class="required">*</span></label>
+    <input type="text" id="firstName" name="firstName" placeholder="Enter First Name" required>
 
 <label for="MidName">Middle Name:</label>
 <input type="text" id="MidName" name="MidName" placeholder="Enter Middle Name">
 
-<label for="lastName">Last Name:</label>
+<label for="lastName">Last Name: <span class="required">*</span></label>
 <input type="text" id="lastName" name="lastName" placeholder="Enter Last Name" required>
 
 <label for="suffix">Suffix:</label>
@@ -401,115 +690,111 @@ if (isset($_REQUEST['sbt-btn'])) {
   <option value="female">Female</option>
 </select>
 
+<label for="birthday">Birthday: <span class="required">*</span></label>
+<input type="date" id="birthday" name="birthday" required>
 
-
-<label for="birthday">Birthday:</label>
-      <input type="date" id="birthday" name="birthday" required>
-
-<label for="age">Age:</label>
+<label for="age">Age: <span class="required">*</span></label>
 <input type="number" id="age" name="age" placeholder="Enter Age" required>
 
-<label for="contactNo">Contact Number:</label>
+<label for="contactNo">Contact Number: <span class="required">*</span></label>
 <div class="phone-input-container">
-  <span><img src="philippineflag.webp" alt="Philippine Flag"> +63</span>
-  <input type="text" id="contactNo" name="contactNo" pattern="\d{10}" placeholder="XXXXXXXXXX" maxlength="10">
+  <span class="country-code">
+      <img src="philippineflag.webp" alt="Philippine Flag"> +63
+  </span>
+  <input type="text" id="contactNo" name="contactNo" pattern="\d{10}" placeholder="XXXXXXXXXX" maxlength="10" required>
 </div>
 
+<label for="lotArea">Lot Area: <span class="required">*</span></label>
+<select id="lotArea" name="lotArea" required>
+  <option value="">Select Area Size</option>
+  <option value="1 sq. m">1 sq. m</option>
+  <option value="2 sq. m">2 sq. m</option>
+  <option value="3 sq. m">3 sq. m</option>
+  <option value="4 sq. m">4 sq. m</option>
+  <option value="5 sq. m">5 sq. m</option>
+</select>
 
-      
 
-<h5 class="address-heading">Address</h5> 
+<h1 class="address-heading">Address</h1> 
 
 <br>  
 
+<label for="houseNumber">House No (Lot/Blk): <span class="required">*</span></label>
+<input type="text" id="houseNumber" name="houseNumber" placeholder="Enter House No (Lot/Blk)" required>
 
-      <label for="province">State Province:</label>
-        <select id="province" name="province" required onchange="updateCityMunicipality()">
-          <option value="">Select Province</option>
-          <option value="Aurora">Aurora</option>
-          <option value="Bataan">Bataan</option>
-          <option value="Bulacan">Bulacan</option>
-          <option value="Nueva Ecija">Nueva Ecija</option>
-          <option value="Pampanga">Pampanga</option>
-          <option value="Tarlac">Tarlac</option>
-          <option value="Zambales">Zambales</option>
-        </select>
+<label for="streetName">Street Name: <span class="required">*</span></label>
+<input type="text" id="streetName" name="streetName" placeholder="Enter Street Name" required>
 
-        <label for="city">City/Municipality:</label>
-        <select id="city" name="city" required onchange="updateBarangay()">
-          <option value="">Select City/Municipality</option>
-        </select>
+<label for="province">Province: <span class="required">*</span></label>
+<select id="province" name="province" required>
+    <option value="">Select Province</option>
+</select>
+<input type="hidden" id="provinceText" name="provinceText">
 
-        <label for="barangay">Barangay:</label>
-        <select id="barangay" name="barangay" required>
-          <option value="">Select Barangay</option>
-        </select>
+<label for="city">City/Municipality: <span class="required">*</span></label>
+<select id="city" name="city" required>
+    <option value="">Select City/Municipality</option>
+</select>
+<input type="hidden" id="cityText" name="cityText">
 
-        <label for="houseNumber">House No (Lot/Blk):</label>
-        <input type="text" id="houseNumber" name="houseNumber" placeholder="Enter House No (Lot/Blk)" required>
+<label for="barangay">Barangay: <span class="required">*</span></label>
+<select id="barangay" name="barangay" required>
+    <option value="">Select Barangay</option>
+</select>
+<input type="hidden" id="barangayText" name="barangayText">
 
-        <label for="streetName">Street Name:</label>
-        <input type="text" id="streetName" name="streetName" placeholder="Enter Street Name" required>
 
 
     
-      <input type="submit" value="Generate QR Code" name="sbt-btn">
+        <input type="submit" value="Generate QR Code" name="sbt-btn" class="generate-qr-button">
+
     </form>
   </div>
 </div>
 
 
-<!-- The successModal -->
-<div id="successModal" class="modal">
+    <!-- Logout Modal -->
+    <div id="logoutModal" class="logout-modal">
+        <div class="logout-modal-content">
+            <span class="close-logout-modal" onclick="closeLogoutModal()">&times;</span>
+            <h2>Confirm Logout</h2>
+            <p>Are you sure you want to log out?</p>
+            <div class="modal-actions">
+                <button onclick="confirmLogout()">Yes, Log Out</button>
+                <button onclick="closeLogoutModal()">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Success Modal -->
+<div id="successModal" class="success-modal" style="display: none;">
     <div class="success-modal-content">
-        <span class="success-close">&times;</span>
-        <!-- Add the checkmark GIF here -->
-        <img src="pics/check.gif" alt="Success Checkmark" style="width:100px; height:100px; display:block; margin: 0 auto;">
-        <h3>Success!</h3>
-        <p class="success-message">Vendor ID: <?php echo $formattedID; ?> has been successfully saved.</p>
-        <button class="success-modal-button" id="redirectButton">OK</button>
+        <img src="pics/checkk.gif" alt="Success Check" style="width: 50px; height: 50px;">
+        <h2>Vendor successfully registered!</h2>
     </div>
 </div>
 
-
-
 <script>
 
-
-// Get the modal
-var successModal = document.getElementById("successModal");
-
-// Get the <span> element that closes the modal
-var successClose = document.getElementsByClassName("success-close")[0];
-
-// Get the "OK" button
-var successOkButton = document.getElementById("redirectButton");
-
-// When the user clicks on <span> (x), close the modal
-successClose.onclick = function () {
-    successModal.style.display = "none";
-}
-
-// When the user clicks anywhere outside of the modal, close it
-window.onclick = function (event) {
-    if (event.target == successModal) {
-        successModal.style.display = "none";
-    }
-}
-
-// Redirect to vendorlist.php when "OK" button is clicked
-successOkButton.onclick = function () {
-    window.location.href = 'vendorlist.php'; // Redirect after clicking OK
-}
-
-// Show the modal when the form is submitted successfully
-window.onload = function () {
-    <?php if (isset($_REQUEST['sbt-btn'])) { ?>
+ // Function to show the success modal
+ function showSuccessModal() {
+        var successModal = document.getElementById("successModal");
         successModal.style.display = "block";
-    <?php } ?>
-};
+        
+        // Hide the modal after 3 seconds and redirect to vendorlist.php
+        setTimeout(function () {
+            successModal.style.display = "none";
+            window.location.href = 'vendorlist.php';
+        }, 3000);
+    }
 
-
+    // Check if the URL contains the success parameter
+    window.onload = function() {
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.has('success')) {
+            showSuccessModal();
+        }
+    };
   //CONTACT
 
   document.getElementById('contactNo').addEventListener('input', function (e) {
@@ -554,208 +839,103 @@ calculateAge();
 
 //address
 
-const barangayData = {
-    //Municipality of bulacan and barangays
-    "Angat": ["Banaban", "Baybay", "Binagbag", "Donacion", "Encanto", "Laog", "Marungko", "Mercado", "Niugan", "Paltok", "Pulong Yantok", "San Roque", "Santa Cruz", "Sapang Pari", "Taboc", "Binagbag"],
-    "Balagtas": ["Borol 1st", "Borol 2nd", "Dalig", "Longos", "Panginay", "Pulong Gubat", "San Juan", "Santol", "Wawa"],
-    "Angeles": ["Agapito Del Rosario", "Anunas", "Balibago", "Capaya", "Claro M. Recto", "Cuayan", "Cutcut", "Cutud", "Lourdes Northwest", "Lourdes Sur", "Lourdes Sur East", "Malabanias", "Margot", "Marisol", "Mining", "Pampang", "Pandan", "Pulung Maragul", "Pulung Cacutud", "Pulung Bulu", "Salapungan", "San Jose", "San Nicolas", "Santa Teresita", "Santa Trinidad", "Santo Domingo", "Santo Rosario", "Sapalibutad", "Sapangbato", "Tabun", "Virgen Delos Remedios"],
-    "Balagtas": ["Borol 1st", "Borol 2nd", "Dalig", "Longos", "Panginay", "Pulong Gubat", "San Juan", "Santol", "Wawa"],
-    "Baliuag": ["Bagong Nayon", "Barangca", "Batia", "Calantipay", "Catulinan", "Concepcion", "Makinabang", "Matangtubig", "Paitan", "Poblacion", "Sabang", "San Jose", "San Roque", "Santa Barbara", "Santa Cruz", "Tangos", "Tiaong", "Tilapayong", "Virgen Delas Flores"],
-    "Bocaue": ["Antipona", "Bagumbayan", "Bambang", "Batia", "Biñang 1st", "Biñang 2nd", "Bolacan", "Bundukan", "Bunlo", "Caingin", "Duhat", "Igulot", "Lolomboy", "Poblacion", "Sulucan", "Taal", "Tambubong", "Turo", "Wakas"],
-    "Bulakan": ["Bagumbayan", "Balubad", "Bambang", "Matungao", "Maysantol", "Pitpitan", "Perez", "San Francisco", "San Jose", "San Nicolas", "Santa Ana", "Sapang", "Taliptip", "Tibig"],
-    "Bustos": ["Bonga Mayor", "Bonga Menor", "Camachile", "Cambaog", "Catacte", "Malamig", "Mina", "Pagala", "Poblacion", "San Pedro", "Santor", "Talampas"],
-    "Calumpit": ["Balungao", "Buguion", "Calizon", "Calumpang", "Corazon", "Frances", "Gatbuca", "Gugo", "Iba Este", "Iba Oeste", "Longos", "Lumbreras", "Mabolo", "Maysantol", "Palimbang", "Panginay", "Pio Cruzcosa", "Poblacion", "Pulo", "San Jose", "San Juan", "San Marcos", "Santa Catalina", "Santa Lucia", "Santo Cristo", "Sapang Bayan", "Sapang Putol","Sergio Bayan", "Sucol", "Tabon"],
-    "Doña Remedios Trinidad": ["Bagong Barrio", "Bakal I", "Bakal II", "Bayabas", "Camachin", "Camachile", "Kalawakan", "Kabayunan", "Pulong Sampalok", "Sapang Bulak"],
-    "Guiguinto": ["Cutcut", "Daungan", "Ilang-ilang", "Malis", "Panginay", "Poblacion", "Pritil", "Pulong Gubat", "Santa Cruz", "Santa Rita","Tabang","Tabe","Tiaong","Tuktukan"],
-    "Hagonoy": ["Abulalas", "Carillo", "Iba", "Iba-Iba", "Palapat", "Pugad", "San Agustin", "San Isidro", "San Jose", "San Juan", "San Miguel", "San Nicolas", "San Pablo", "San Pascual", "San Pedro", "San Roque", "Santa Elena", "Santa Monica", "Santo Niño", "Santo Rosario", "Tampok"],
-    "Malolos": ["Anilao", "Atlag", "Babatnin", "Bagna", "Bagong Bayan", "Balayong", "Balite", "Bangkal", "Barihan", "Bungahan", "Caingin", "Calero", "Caliligawan", "Canalate", "Caniogan", "Catmon", "Cofradia", "Dakila", "Guinhawa", "Liang", "Ligas", "Longos", "Look 1st", "Look 2nd", "Lugam", "Mabolo", "Mambog", "Masile", "Matimbo", "Mojon", "Namayan", "Niugan", "Pamarawan", "Panasahan", "Pinagbakahan", "San Agustin", "San Gabriel", "San Juan", "San Pablo", "San Vicente", "Santiago", "Santisima Trinidad", "Santo Cristo", "Santo Niño", "Santo Rosario", "Santor", "Sumapang Bata", "Sumapang Matanda", "Taal", "Tikay"],
-    "Marilao": ["Abangan Norte", "Abangan Sur", "Ibayo", "Lambakin", "Lias", "Loma de Gato", "Nagbalon", "Patubig", "Poblacion I", "Poblacion II", "Prenza I", "Prenza II", "Santa Rosa I", "Santa Rosa II", "Saog", "Tabing Ilog"],
-    "Meycauayan": ["Bahay Pare", "Bancal", "Banga", "Batong Malake", "Bayugo", "Caingin", "Calvario", "Camalig", "Hulo", "Iba", "Langka", "Lawa", "Libtong", "Liputan", "Longos", "Malhacan", "Pajo", "Pandayan", "Pantoc", "Perez", "Poblacion", "Saint Francis", "Saluysoy", "Tugatog", "Ubihan", "Zamora"],  
-    "Norzagaray": ["Bangkal", "Baraka", "Bigte", "Bitungol", "Friendship Village Resources", "Matictic", "Minuyan", "Partida", "Pinagtulayan", "Poblacion", "San Lorenzo", "San Mateo", "Santa Maria", "Tigbe"],
-    "Obando": ["Binuangan", "Hulo", "Lawa", "Mabolo", "Pag-asa", "Paliwas", "Panghulo", "San Pascual", "Tawiran", "Ubihan", "Paco", "Salambao"],
-    "Pandi": ["Bagong Barrio", "Bagong Pag-asa", "Baka-bakahan", "Bunsuran 1st", "Bunsuran 2nd", "Bunsuran 3rd", "Cacarong Bata", "Cacarong Matanda", "Cupang", "Malibong Bata", "Manatal", "Mapulang Lupa", "Masuso", "Masuso East", "Poblacion", "Real de Cacarong", "Santo Niño", "San Roque", "Siling Bata", "Siling Matanda"],
-    "Paombong": ["Akle", "Bagong Barrio", "Balagtas", "Binakod", "Kapiti", "Malumot", "Pinalagdan", "Poblacion", "San Isidro I", "San Isidro II", "San Jose", "San Roque", "San Vicente", "Santa Cruz", "Santa Lucia", "Sapang Dalaga"],
-    "Plaridel": ["Agnaya", "Bagong Silang", "Banga 1st", "Banga 2nd", "Bintog", "Bulihan", "Caniogan", "Dampol", "Lumang Bayan", "Parulan", "Poblacion", "Pulong Bayabas", "San Jose", "Santa Ines", "Santo Cristo", "Santo Niño", "Sapang Putol"],
-    "Pulilan": ["Balatong A", "Balatong B", "Cutcot", "Dampol 1st", "Dampol 2nd", "Dulong Malabon", "Inaon", "Longos", "Lumbac", "Paltao", "Penabatan", "Poblacion", "Santa Peregrina", "San Francisco", "Tibag", "Tabon", "Tibag"],
-    "San Ildefonso": ["Akling", "Alagao", "Anyatam", "Bagong Barrio", "Bagong Pag-asa", "Basuit", "Bubulong Malaki", "Calasag", "Calawitan", "Casalat", "Lapnit", "Malipampang", "Masile", "Matimbubong", "Paltao", "Pinaod", "Poblacion", "Pulong Tamo", "San Juan", "Sapang Dayap", "Sumandig", "Telepatio", "Upig", "Ulingao"],
-    "San Miguel": ["Bagong Silang", "Balaong", "Bardias", "Baritan", "Biazon", "Bicas", "Buga", "Buliran", "Calumpang", "Cambita", "Camias", "Damas", "Ilog Bulo", "Kabaritan", "King Kabayo", "Lico", "Lomboy", "Magmarale", "Maligaya", "Mandile", "Manggahan", "Matimbubong", "Pacalag", "Paliwasan", "Poblacion", "Pulong Duhat", "Sacdalan", "Salangan", "San Agustin", "San Jose", "San Juan", "San Roque", "San Vicente", "Santa Lucia", "Santa Rita Bata", "Santa Rita Matanda", "Santo Cristo", "Sapang", "Sapang Dayap", "Sapang Putik", "Tandiyong Bakal", "Tibagan", "Tucdoc", "Tumana", "Tungkong Mangga", "Tungkong Munti", "Tungkong Silangan", "Tungkong Upper"],
-    "San Rafael": ["Banca-Banca", "Caingin", "Coral na Bato", "Cruz na Daan", "Dagat-Dagatan", "Diliman I", "Diliman II", "Libis", "Lico", "Maasim", "Mabalas-Balas", "Mabini", "Malapad na Parang", "Maronguillo", "Pacalag", "Pagala", "Pantubig", "Pasong Bangkal", "Poblacion", "Pulong Bayabas", "Salapungan", "San Agustin", "San Roque", "Sapang Putik", "Talacsan", "Tambubong", "Tungkong Mangga", "Ulingao"],
-    "Santa Maria": ["Bagbaguin", "Balasing", "Buenavista", "Bulac", "Camangyanan", "Catmon", "Cay Pombo", "Caysio", "Dulong Bayan", "Guyong", "Lalakhan", "Mag-asawang Sapa", "Mahabang Parang", "Manggahan", "Parada", "Poblacion", "Pulong Buhangin", "San Gabriel", "San Jose Patag", "San Vicente", "Santa Clara", "Santa Cruz", "Silangan", "Tabing Bakod", "Tumana"],   
-    "San Jose del Monte": ["Bagong Buhay I", "Bagong Buhay II", "Bagong Buhay III", "Ciudad Real", "Dulong Bayan", "Fatima I", "Fatima II", "Fatima III", "Fatima IV", "Fatima V", "Francisco Homes-Guijo", "Francisco Homes-Mulawin", "Francisco Homes-Narra", "Francisco Homes-Yakal", "Gaya-Gaya", "Graceville", "Kaybanban", "Kaypian", "Lawang Pare", "Minuyan I", "Minuyan II", "Minuyan III", "Minuyan IV", "Minuyan Proper", "Poblacion", "Poblacion I", "Poblacion II", "Poblacion III", "San Isidro", "San Manuel", "San Martin I", "San Martin II", "San Martin III", "San Martin IV", "San Martin V", "San Pedro", "Santa Cruz", "Sapang Palay Proper", "Santo Cristo", "Tungkong Mangga"],
+// Load CSV data and parse it for provinces, municipalities, and barangays
+async function loadAddressData() {
+  const response = await fetch('Philippine_Address_Data.csv');
+  const data = await response.text();
 
-    //Municipality of aurora and barangays
-    "Baler": ["Barangay I (Poblacion)", "Barangay II (Poblacion)", "Barangay III (Poblacion)", "Barangay IV (Poblacion)", "Buhangin", "Calabuanan", "Obligacion", "Pingit", "Reserva", "Sabang", "Suklayin", "Zabali"],
-    "Casiguran": ["Barangay 1 (Poblacion)", "Barangay 2 (Poblacion)", "Barangay 3 (Poblacion)", "Barangay 4 (Poblacion)", "Barangay 5 (Poblacion)", "Barangay 6 (Poblacion)", "Barangay 7 (Poblacion)", "Barangay 8 (Poblacion)", "Calangcuasan", "Cozo", "Culat", "Dibacong", "Esperanza", "Lual", "San Ildefonso", "Tabas"],
-    "Dilasag": ["Barangay 1 (Poblacion)", "Barangay 2 (Poblacion)", "Barangay 3 (Poblacion)", "Barangay 4 (Poblacion)", "Diniog", "Dicabasan", "Dilaguidi", "Esperanza", "Lawang", "Masagana"],
-    "Dinalungan": ["Abuleg", "Barangay I (Poblacion)", "Barangay II (Poblacion)", "Barangay III (Poblacion)", "Dibaraybay", "Dimabuno", "Lipit", "Mapalad"],
-    "Dingalan": ["Aplaya", "Butas na Bato", "Caragsacan", "Davildavilan", "Ibona", "Lagsing", "Maligaya", "Matawe", "Paltic", "Poblacion", "Tanawan", "Umiray", "White Beach"],
-    "Dipaculao": ["Bacong", "Barangay I (Poblacion)", "Barangay II (Poblacion)", "Barangay III (Poblacion)", "Bani", "Borlongan", "Buenavista", "Calaocan", "Dibutunan", "Dinadiawan", "Diteki", "Gupa", "Lobbot", "Maligaya", "Mucdol"],
-    "Maria Aurora": ["Alcala", "Bagtu", "Bayanihan", "Bazal", "Dialatnan", "Diaat", "Dibut", "Diarabasin", "Dimanayat", "Ditumabo", "Kadayacan", "Malasin", "Suguit", "Villa Aurora", "Barangay I (Poblacion)", "Barangay II (Poblacion)", "Barangay III (Poblacion)", "Quirino"],
-    "San Luis": ["Bacong", "Balete", "Dibalo", "Dibut", "Dimanayat", "Ditumabo", "L. Pimentel", "Nonong Senior", "Real", "San Isidro", "San Jose", "San Juan", "Zarah"],
+  // Parse CSV data into an array of objects and handle empty rows
+  const rows = data.split('\n').slice(1).filter(row => row.trim() !== '');
+  const addresses = rows.map(row => {
+    const [level, name, code] = row.split(',').map(item => item ? item.trim() : ''); // Ensure no undefined properties
+    return { level, name, code };
+  });
 
-    //Municipality of bataan and barangays
-  "Abucay": ["Bangkal", "Calaylayan", "Capitangan", "Gabon", "Laon", "Mabatang", "Omboy", "Panibatuhan", "Salamague", "Wawa"],
-  "Bagac": ["Atilano L. Ricardo", "Bagumbayan", "Binuangan", "Ibaba", "Ibis", "Parang", "Paysawan", "Quinawan", "Pag-Asa", "Banawang", "Binukawan"],
-  "Balanga City": ["Bagong Silang", "Bagumbayan", "Cataning", "Cupang Proper", "Cupang West", "Dangcol", "Ibayo", "Malabia", "Poblacion", "San Jose", "San Juan", "Sibacan", "Talisay", "Tenejero", "Tortugas"],
-  "Dinalupihan": ["Alis", "Colo", "Daang Bago", "Del Rosario", "Gen. Luna", "Happy Valley", "Katipunan", "Layac", "Luacan", "Mabini", "Magsaysay", "Maligaya", "Naparing", "New San Jose", "Old San Jose", "Padre Dandan", "Pag-Asa", "Pagalanggang", "Poblacion", "Roxas", "Saguing", "San Benito", "San Isidro", "San Pablo", "San Ramon", "Santa Isabel"],
-  "Hermosa": ["A. Rivera", "Almacen", "Bacong", "Balsic", "Burgos", "Cataning", "Del Pilar", "Lamao", "Mabiga", "Mabuco", "Mandama", "Maite", "Palihan", "Pulo", "Saba", "Sawang", "Sumalo"],
-  "Limay": ["Alangan", "Duale", "Kitang 1 and 2", "Lamao", "Landing", "Poblacion", "Reformista", "Saint Francis II", "San Francisco de Asis", "San Isidro", "Tuyo", "Wawa", "Kitang I"],
-  "Mariveles": ["Alas-asin", "Balon-Anito", "Batangas II", "Baseco", "Camaya", "Iting", "Lamao", "Lucanin", "Malaya", "Maligaya", "Poblacion", "San Carlos", "San Isidro", "Santo Rosario", "Sisiman", "Townsite", "Wawa"],
-  "Morong": ["Binaritan", "Mabayo","Nagbalayong","Sabang", "Poblacion"],
-  "Orani": ["Apollo", "Bagong Paraiso", "Balut", "Bayan", "Calero", "Centro", "Doña", "Kapinpin", "Kolinlang", "Mulawin", "Pansacala", "Pociano", "Pantalan Luma", "Paraiso", "Santo Domingo", "Santo Rosario", "Wawa"],
-  "Orion": ["Arellano", "Bagumbayan", "Balagtas", "Balut", "Bantan", "Calungusan", "Daan Bilolo", "Daang Parola", "Kapunitan", "Lati", "Lucanin", "Pandatung", "Puting Buhangin", "Sabatan", "San Vicente"],
-  "Pilar": ["Bagumbayan", "Balut", "Barangay Pantingan", "Liyang", "Nagwaling", "Panilao", "Pita", "Saint Francis I", "Santa Rosa", "Wakas"],
+  return addresses;
+}
+// Sort addresses alphabetically by name
+function sortAddresses(addresses) {
+    return addresses.sort((a, b) => a.name.localeCompare(b.name));
+}
 
+// Populate the Province dropdown
+async function populateProvinces() {
+    const addresses = await loadAddressData();
+    const provinces = sortAddresses(addresses.filter(address => address.level === 'Prov'));
+    const provinceDropdown = document.getElementById('province');
 
-   //Municipality of nueva ecija and barangays
-    "Aliaga": ["Aliaga", "Baguio", "Banga", "Barangka", "Bitas", "Bongabong", "Bulan-bulan", "Calabuan", "Dela Paz", "Gapan", "Inbit", "Lubo", "Mabini", "Malinao", "Mambog", "Mandalag", "Mauway", "Minuli", "Nagcatumbalen", "San Vicente", "Santo Domingo"],
-    "Bongabon": ["Bagong Sikat", "Basilang", "Bitulok", "Cuyapo", "Lumbang", "Malimba", "Malanday", "Manganay", "Mangalang", "Magsaysay", "Mabini", "Poblacion", "San Vicente", "Santa Maria", "Tagpos"],
-    "Cabiao": ["Bañadero", "Biclat", "Bulaon", "Cabitang", "Dila-dila", "Longos", "Malabanan", "Maligaya", "Poblacion", "San Jose", "San Juan", "San Roque", "San Vicente"],
-    "Cabanatuan": ["Bagong Sikat", "Banggain", "Buan", "Caalibangbangan", "Capas", "Canawan", "Carmen", "H. del Pilar", "Hulo", "Imelda", "Laurel", "Poblacion", "San Jose", "San Miguel", "San Pablo", "San Roque", "Santa Rita", "Santiago", "Taal", "Tungkong Mangga"],
-    "Carranglan": ["Atut, Bataan", "Carmen", "Del Pilar", "Dingalan", "Labrador", "Lemon", "Magsaysay", "Maranon", "Poblacion", "San Felipe", "San Jose", "San Vicente", "Tala", "Urbiztondo"],
-    "Cuyapo": ["Bagumbayan", "Bangal", "Bocaue", "Cuyapo", "Dawis", "Dolores", "Hidalgo", "Layog", "Magaspac", "Maligaya", "Mangat", "Mangga", "Mansaraysayan", "San Antonio", "San Felipe", "San Isidro", "San Juan", "San Vicente", "Santa Rosa", "Tondo"],
-    "Gapan": ["Alvarez", "Bangued", "Bata", "Bocobo", "Bongabon", "Bunbungan", "Concepcion", "Duhat", "Hulog", "Jaen", "Mabini", "Poblacion", "San Isidro", "San Vicente", "San Jose", "Santo Domingo", "Santa Lucia"],
-    "Gabaldon": ["Bayanan", "Bungahan", "Bunga", "Dela Paz", "La Torre", "Magsaysay", "Mangalang", "Maluya", "Mayantoc", "Poblacion", "San Isidro", "San Vicente", "Santa Maria"],
-    "General Mamerto Natividad": ["A. Mendoza", "Bagong Sikat", "Bayanan", "Caguioa", "Camuin", "Dila-dila", "Doña Aurora", "Habul", "Labrador", "Maimpis", "Mawaca", "Poblacion", "San Felipe", "San Isidro"],
-    "General Tinio": ["Alua", "Cangca", "Guimba", "Maguin", "Malabnang", "Manggahan", "Natividad", "Poblacion", "San Jose", "San Vicente"],
-    "Guimba": ["Bagong Sikat", "Barangal", "Buliran", "Cayanga", "Gapan", "Magsaysay", "Malawig", "Mawaca", "Poblacion", "San Felipe", "San Isidro"],
-    "Jaen": ["Bagong Sikat", "Baliwag", "Bungahan", "Bunbungan", "Cabaruan", "Cacutud", "Carmen", "Hulo", "Magsaysay", "Maligaya", "Poblacion", "San Antonio", "San Isidro", "San Vicente"],
-    "Laur": ["Bagong Silang", "Bamban", "Bunbungan", "Labrador", "Magsaysay", "Malabnang", "Mansaraysayan", "Natividad", "Poblacion", "San Jose", "San Vicente"],
-    "Licab": ["Bansalangin", "Cangcawayan", "Malimango", "Poblacion", "San Isidro", "San Vicente", "Santa Maria"],
-    "Llanera": ["Bayanan", "Bitas", "Magsaysay", "Manggahan", "Milan", "Poblacion", "San Isidro", "San Jose", "San Vicente"],
-    "Lupao": ["Bagong Silang", "Camascan", "Cayapa", "Cayanga", "Cuyapo", "Kangaro", "Langka", "San Jose", "San Vicente"],
-    "Muñoz": ["Bagong Silang", "Balinag", "Bulaon", "Bunga", "Cabunian", "Cananay", "Casaloy", "Gabaldon", "Librad", "Luna", "San Jose", "Santa Cruz"],
-    "Nampicuan": ["Bagong Sikat", "Bayo", "Bitas", "Calabuan", "Maligaya", "Nampicuan", "Poblacion", "San Antonio", "San Jose"],
-    "Pantabangan": ["Bagumbayan", "Buan", "Cansuso", "Dapdap", "Del Pilar", "Imelda", "Poblacion", "San Jose"],
-    "Peñaranda": ["Bansalangin", "Biclat", "Bubuyan", "Magtangola", "Magsaysay", "Maligaya", "Masilang", "Poblacion", "San Jose", "San Vicente"],
-    "Quezon": ["Baguio", "Bambang", "Bubuy", "Cagayan", "Dapdap", "Imbang", "Poblacion", "San Jose"],
-    "Rizal": ["Bucot", "Bulihan", "Canantong", "Dila-dila", "Elias Angeles", "Hampangan", "Hulo", "Kalabangan", "Poblacion", "San Vicente", "San Jose", "Santa Rosa"],
-    "San Antonio": ["Bagong Sikat", "Bulaon", "Luneta", "Poblacion", "San Isidro"],
-    "San Isidro": ["Bagong Silang", "Bayan", "Bulacan", "Cabaruan", "Magdalena", "Maligaya", "Manggahan", "Poblacion", "San Vicente"],
-    "San Jose": ["Bungabon", "Concepcion", "Gapan", "Guimba", "La Paz", "Licab", "Mabini", "Magsaysay", "Poblacion", "San Vicente", "Santa Maria"],
-    "San Leonardo": ["Bacala", "Bayan", "Bulong", "Cabuyao", "Cacanauan", "Concepcion", "Magsaysay", "Manggahan", "San Isidro", "San Vicente", "Santa Maria"],
-    "Santa Rosa": ["Bagumbayan", "Baguio", "Balingcanaway", "Bongabong", "Dila-dila", "Magsaysay", "Maligaya", "Poblacion", "San Isidro"],
-    "Santo Domingo": ["Bamban", "Baru-an", "Cabalintan", "Carmen", "Dela Paz", "Gulod", "Magsaysay", "Poblacion", "San Jose"],
-    "Talavera": ["Aliaga", "Alvila", "Bagumbayan", "Baliwag", "Bulaon", "Canarail", "Cangca", "Carmen", "Gulod", "Hulo", "Labrador", "Malabnang", "Poblacion", "San Vicente"],
-    "Talugtug": ["Bagumbayan", "Bataan", "Bulasan", "Cabalantian", "Canak", "Dapdap", "Malibay", "Poblacion", "San Vicente", "Santa Rosa"],
-    "Zaragoza": ["Banuang", "Biga", "Bagumbayan", "Bongabon", "Poblacion", "San Vicente"],
+    provinces.forEach(province => {
+        let option = document.createElement('option');
+        option.value = province.code;
+        option.textContent = province.name;
+        provinceDropdown.appendChild(option);
+    });
+}
 
-    //Municipality of  pampanga and barangays
-    "Angeles City": ["Agapito Del Rosario", "Anunas", "Balibago", "Bical", "Capaya", "Cutcut", "Del Rosario", "Duquit", "Epifanio", "Pulungbulu", "San Jose", "San Nicolas", "Santo Rosario", "Sapangbato", "Telebastagan"],
-    "Apalit": ["Bamboo", "Banal", "Bata", "Bucal", "Cansinala", "Dila-Dila", "Janipaan", "Santo Cristo", "San Vicente", "Santo Tomas"],
-    "Arayat": ["Bagong Sikat", "Banga", "Bañadero", "Bulu", "Caduang Tete", "Cutcut", "San Pedro", "San Juan", "Santa Lucia"],
-    "Bacolor": ["Bacolor", "Bulaon", "Magsaysay", "San Vicente", "San Pablo", "Santo Niño"],
-    "Candaba": ["Bacong", "Bambang", "Cabuyao", "Capalangan", "Dulong Baybay", "Mabilog", "Malusac", "San Francisco", "San Luis", "Santo Rosario"],
-    "Floridablanca": ["Bamban", "Bayan", "Bocaue", "Bulaon", "Dela Paz", "Duquit", "Lusong", "San Jose", "San Pedro", "San Vicente"],
-    "Guagua": ["Balayong", "Bayan", "Bulaon", "Cameron", "Del Carmen", "Magsaysay", "Malusac", "Poblacion", "San Pedro", "Santo Rosario"],
-    "Lubao": ["Bañadero", "Bucal", "Dela Paz", "Mabalacat", "Malusac", "San Felipe", "San Miguel", "San Pablo", "San Pedro", "Santo Niño"],
-    "Mabalacat": ["Bamban", "Bayan", "Capas", "Dela Paz", "Laguna", "San Jose", "San Martin", "San Vicente", "Santo Rosario"],
-    "Macabebe": ["Bangan", "Burol", "Concepcion", "Dulong Baybay", "Malusac", "Mansilingan", "Poblacion", "San Isidro", "Santa Barbara", "Santa Lucia"],
-    "Masantol": ["Bagang", "Bamboo", "Bucal", "Capalangan", "Dela Paz", "Dulong Baybay", "Hapag", "Malusac", "Mansilingan", "Masantol", "San Jose", "San Miguel", "San Pablo", "San Pedro", "San Vicente", "Santo Niño", "Santo Tomas", "Sapangbato", "Sawa", "Tabuyucan", "Talang", "Tinang", "Tuloy", "Wawa", "Bacao"],
-    "Mexico": ["Bagong Bataan", "Balibago", "Dela Paz", "Poblacion", "San Antonio", "San Jose", "San Pedro", "Santo Rosario"],
-    "Porac": ["Bayan", "Bical", "Camachiles", "Dapdap", "Lambat", "Mabalacat", "Manibaug", "Santo Niño", "San Pedro"],
-    "San Fernando": ["Baliti", "Del Pilar", "Guadalupe", "Julius B. Villanueva", "Lourdes Sur", "Poblacion", "San Agustin", "San Isidro", "San Jose", "San Juan"],
-    "San Luis": ["Bagumbayan", "Bulaon", "Cansinala", "Dela Paz", "Maligaya", "Marangal", "San Fernando", "San Jose", "Santo Rosario"],
-    "San Simon": ["Baleg", "Balucuc", "San Jose", "Santo Tomas", "Santa Monica"],
-    "Sasmuan": ["Bamboo", "Buan", "Bulaon", "Guinbalay", "Lambat", "Malusac", "San Jose", "Santa Rosa"],
+// Event listener for Province selection and dropdown initialization
+document.addEventListener('DOMContentLoaded', function () {
+    populateProvinces();
 
-    //tarlac
-    "Anao": ["Anao", "Baguio", "Bagong Bataan", "Cabitang", "Cabaluyan", "Calapacuan", "Camachile", "Dawis", "Dela Paz", "Guimba", "Malibong", "San Antonio", "San Jose", "San Juan", "San Pedro", "Santa Lucia"],
-    "Bamban": ["Bagumbayan", "Bamban", "Cabaluan", "Cacabe", "Cayanga", "Malacat", "San Jose", "San Nicolas", "San Pablo", "Santa Rosa"],
-    "Capas": ["Bamban", "Capas", "Cutcut", "Maruglu", "Mabalacat", "Manukang Bayan", "San Antonio", "San Jose", "San Juan", "Santa Juliana"],
-    "Concepcion": ["Bamban", "Concepcion", "Nambalan", "Poblacion", "San Jose", "San Juan", "San Pedro", "Santa Rita"],
-    "La Paz": ["Bacani", "Dela Paz", "Gomez", "La Paz", "Manalang", "San Isidro", "Santa Lucia", "Santo Domingo"],
-    "Mayantoc": ["Banga", "Banga", "Bebong", "Bitao", "Cacabe", "Gapan", "Lawang Bato", "Nampicuan", "San Francisco", "San Jose", "San Vicente"],
-    "Moncada": ["Bagong Sikat", "Balayong", "Bamban", "Canukang", "Concepcion", "Laoang", "Poblacion", "San Jose", "San Manuel", "San Rafael"],
-    "Paniqui": ["Aglipay", "Concepcion", "Lourdes", "Magsaysay", "Manat", "Paniqui", "San Antonio", "San Jose", "San Luis", "San Pedro"],
-    "San Jose": ["Banga", "Bucal", "Caniogan", "Dela Paz", "Guadalupe", "Laoang", "Poblacion", "San Jose", "Santa Lucia", "Santo Domingo"],
-    "San Manuel": ["Alua", "Bagong Sikat", "Concepcion", "Nambalan", "Poblacion", "San Felipe", "San Jose", "San Juan"],
-    "San Rafael": ["Bucao", "Bucal", "Maligaya", "Poblacion", "San Jose", "San Pedro", "Santa Rita"],
-    "Santa Ignacia": ["Balaoan", "Bani", "Banua", "Batang", "Bucal", "Dapdap", "Japad", "Maligaya", "Poblacion", "San Jose"],
-    "Tarlac City": ["Aguinaldo", "Balayong", "Balingcanaway", "Bamban", "Bata", "Calibutbut", "Labrador", "Lourdes", "Magsaysay", "Poblacion", "San Jose", "San Vicente", "Santo Cristo"],
-    "Victoria": ["Abonador", "Bagong Bait", "Balungao", "Buan", "Bulac", "Dapdap", "Laguerta", "Liberty", "Lipa", "Mabalacat", "San Jose", "San Vicente", "Santa Rosa"],
+    document.getElementById('province').addEventListener('change', async function () {
+        const provinceCode = this.value;
+        const provinceText = this.options[this.selectedIndex].text; // Get the selected province text
+        document.getElementById('provinceText').value = provinceText; // Set hidden input value
 
-// zambales
-    "Botolan": ["Bagalangit", "Balaybay", "Banga", "Bebes", "Biclat", "Bunga", "Capas", "Columban", "Culo", "Dapdap", "Dela Paz", "Gatpuno", "Mabini", "Magsaysay", "Maloma", "Mansalay", "Mansalay", "Masinloc", "Nangalisan", "Owa", "Poblacion", "San Isidro", "San Juan", "San Pedro", "Santo Rosario"],
-    "Castillejos": ["Bagong Sikat", "Bago", "Bamban", "Bantay", "Bebes", "Gumain", "Malaki", "Magsaysay", "Maligaya", "Poblacion", "San Antonio", "San Felipe", "San Isidro", "San Marcelino", "San Pedro", "Santa Rosa"],
-    "Iba": ["Aguinaldo", "Balayong", "Bamban", "Batasan", "Bulaon", "Burakan", "Cabaritan", "Casilagan", "Cruz", "Del Pilar", "La Paz", "Magsaysay", "Poblacion", "San Antonio", "San Isidro", "Santa Rita"],
-    "Masinloc": ["Bacala", "Bacala", "Balayong", "Bato", "Binoclutan", "Bunga", "Dona Cecilia", "Maloma", "Magsaysay", "Poblacion", "San Agustin", "San Andres", "San Marcelino"],
-    "Olongapo City": ["Barretto", "East Tapinac", "New Ilalim", "New Cabalan", "Old Cabalan", "Palanan", "San Antonio", "San Isidro", "San Marcelino", "Wawandue"],
-    "San Antonio": ["Bagong Silang", "Bani", "Bamban", "Banao", "Bayanan", "Bucal", "Dalayap", "Gapan", "Malaguin", "Poblacion", "San Jose", "San Vicente"],
-    "San Felipe": ["Anoling", "Baba", "Baca", "Balayong", "Baro", "Bayanan", "Biclat", "Cayabu", "Gatpuno", "Magsaysay", "Maligaya", "Nangalisan", "Poblacion", "San Vicente", "Santa Rita"],
-    "San Marcelino": ["Bagong Silang", "Balaybay", "Bucal", "Cabangaan", "Dalisdis", "Dalit", "Malusac", "Magsaysay", "Poblacion", "San Jose", "San Vicente"],
-    "San Narciso": ["Bamban", "Bulaon", "Bulaw", "Caguiat", "Culis", "Magsaysay", "Malaguin", "Poblacion", "San Jose", "San Vicente"],
-    "Santa Cruz": ["Bagong Sikat", "Bacala", "Bamban", "Baro", "Cangay", "Del Pilar", "Dela Paz", "San Jose", "San Vicente"],
-    "Subic": ["Alibangbang", "Balayong", "Bamban", "Batan", "Cabatangan", "Cruz", "Dela Paz", "Magsaysay", "Poblacion", "San Antonio", "San Isidro", "San Marcelino", "San Vicente"],
-    "Zambales": ["Bagumbayan", "Camarine", "Linao", "Mangato", "Manuel A. Roxas", "Maguindanao", "Malayo", "Narciso", "Olongapo City", "Pangasinan", "Poblacion", "San Antonio", "San Felipe"], 
+        const addresses = await loadAddressData();
 
-    // pag bubuoin lahat for now central luzon lang meron
-  };
+        // Include both 'Mun' and 'City' levels in the municipalities dropdown
+        const municipalitiesAndCities = sortAddresses(addresses.filter(
+            address => (address.level === 'Mun' || address.level === 'City') && address.code.startsWith(provinceCode.slice(0, 4))
+        ));
 
+        const cityDropdown = document.getElementById('city');
+        cityDropdown.innerHTML = '<option value="">Select City/Municipality</option>';
 
-
-const cityMunicipalityData = {
-    "Aurora": ["Baler", "Casiguran", "Dilasag", "Dinalungan", "Dingalan", "Dipaculao", "Maria Aurora", "San Luis"],
-    "Bataan": ["Balanga", "Abucay", "Bagac", "Dinalupihan", "Hermosa", "Limay", "Mariveles", "Morong", "Orani", "Orion", "Pilar", "Samal"],
-    "Bulacan": ["Angat", "Balagtas", "Baliuag", "Bocaue", "Bulakan", "Bustos", "Calumpit", "Doña Remedios Trinidad", "Guiguinto", "Hagonoy", "Malolos", "Marilao", "Meycauayan", "Norzagaray", "Obando", "Pandi", "Paombong", "Plaridel", "Pulilan", "San Ildefonso", "San Jose del Monte", "San Miguel", "San Rafael", "Santa Maria"],
-   "Nueva Ecija": ["Aliaga", "Bongabon", "Cabiao", "Cabanatuan", "Carranglan", "Cuyapo", "Gapan", "Gabaldon", "General Mamerto Natividad", "General Tinio", "Guimba", "Jaen", "Laur", "Licab", "Llanera", "Lupao", "Muñoz", "Nampicuan", "Pantabangan", "Peñaranda", "Quezon", "Rizal", "San Antonio", "San Isidro", "San Jose", "San Leonardo", "Santa Rosa", "Santo Domingo", "Talavera", "Talugtug", "Zaragoza"],
-   "Pampanga": ["Angeles City", "Apalit", "Arayat", "Bacolor", "Candaba", "Floridablanca", "Guagua", "Lubao", "Mabalacat", "Macabebe","Masantol", "Mexico", "Porac", "San Fernando", "San Luis", "San Simon", "Sasmuan"],
-   "Tarlac": ["Anao", "Bamban", "Capas", "Concepcion", "La Paz", "Mayantoc", "Moncada", "Paniqui", "San Jose", "San Manuel", "San Rafael", "Santa Ignacia", "Tarlac City", "Victoria"],
-   "Zambales": ["Botolan", "Castillejos", "Iba", "Masinloc", "Olongapo City", "San Antonio", "San Felipe", "San Marcelino", "San Narciso", "Santa Cruz", "Subic", "Zambales"],
-   "Abra": ["Bangued", "Boliney", "Bucay", "Bucloc", "Daguioman", "Danglas", "Dolores", "La Paz", "Lacub", "Lagangilang", "Lagayan", "Langiden", "Licuan-Baay", "Luba", "Malibcong", "Manabo", "Penarrubia", "Pidigan", "Pilar", "Sallapadan", "San Isidro", "San Juan", "San Quintin", "Tayum", "Tineg", "Tubo", "Villaviciosa"],
-    "Benguet": ["Atok", "Baguio City", "Bakun", "Bokod", "Buguias", "Itogon", "Kabayan", "Kapangan", "Kibungan", "La Trinidad", "Mankayan", "Sablan", "Tuba", "Tublay"],
-    "Ifugao": ["Aguinaldo", "Alfonso Lista", "Asipulo", "Banaue", "Hingyon", "Hungduan", "Kiangan", "Lagawe", "Lamut", "Mayoyao", "Tinoc"],
-    "Ilocos Norte": ["Adams", "Bacarra", "Badoc", "Bangui", "Banna", "Batac City", "Burgos", "Carasi", "Currimao", "Dingras", "Dumalneg", "Laoag City", "Marcos", "Nueva Era", "Pagudpud", "Paoay", "Pasuquin", "Piddig", "Pinili", "San Nicolas", "Sarrat", "Solsona", "Vintar"],
-    "Ilocos Sur": ["Alilem", "Banayoyo", "Bantay", "Burgos", "Cabugao", "Candon City", "Caoayan", "Cervantes", "Galimuyod", "Gregorio del Pilar", "Lidlidda", "Magsingal", "Nagbukel", "Narvacan", "Quirino", "Salcedo", "San Emilio", "San Esteban", "San Ildefonso", "San Juan", "San Vicente", "Santa", "Santa Catalina", "Santa Cruz", "Santa Lucia", "Santa Maria", "Santiago", "Santo Domingo", "Sigay", "Sinait", "Sugpon", "Suyo", "Tagudin", "Vigan City"],
-    "Kalinga": ["Balbalan", "Lubuagan", "Pasil", "Pinukpuk", "Rizal", "Tabuk City", "Tanudan", "Tinglayan"],
-    "La Union": ["Agoo", "Aringay", "Bacnotan", "Bagulin", "Balaoan", "Bangar", "Bauang", "Burgos", "Caba", "Luna", "Naguilian", "Pugo", "Rosario", "San Fernando City", "San Gabriel", "San Juan", "Santo Tomas", "Santol", "Sudipen", "Tubao"],
-    "Mountain Province": ["Barlig", "Bauko", "Besao", "Bontoc", "Natonin", "Paracelis", "Sabangan", "Sadanga", "Sagada", "Tadian"],
-    "Quezon": ["Agdangan", "Alabat", "Atimonan", "Buenavista", "Burdeos", "Calauag", "Candelaria", "Catanauan", "Dolores", "General Luna", "General Nakar", "Guinayangan", "Gumaca", "Infanta", "Jomalig", "Lopez", "Lucban", "Lucena City", "Macalelon", "Mauban", "Mulanay", "Padre Burgos", "Pagbilao", "Panukulan", "Patnanungan", "Perez", "Pitogo", "Plaridel", "Polillo", "Quezon", "Real", "Sampaloc", "San Andres", "San Antonio", "San Francisco", "San Narciso", "Sariaya", "Tagkawayan", "Tayabas City", "Tiaong", "Unisan"],
-    "Rizal": ["Angono", "Antipolo City", "Baras", "Binangonan", "Cainta", "Cardona", "Jalajala", "Morong", "Pililla", "Rodriguez", "San Mateo", "Tanay", "Taytay", "Teresa"],
-    "Camarines Norte": ["Basud", "Capalonga", "Daet", "Jose Panganiban", "Labo", "Mercedes", "Paracale", "San Lorenzo Ruiz", "San Vicente", "Santa Elena", "Talisay", "Vinzons"],
-    "Camarines Sur": ["Baao", "Balatan", "Bato", "Bombon", "Buhi", "Bula", "Cabusao", "Calabanga", "Camaligan", "Canaman", "Caramoan", "Del Gallego", "Gainza", "Garchitorena", "Goa", "Iriga City", "Lagonoy", "Libmanan", "Lupi", "Magarao", "Milaor", "Minalabac", "Nabua", "Naga City", "Ocampo", "Pamplona", "Pasacao", "Presentacion", "Ragay", "Sagnay", "San Fernando", "San Jose", "Sipocot", "Siruma", "Tigaon", "Tinambac"],
-    "Catanduanes": ["Bagamanoc", "Baras", "Bato", "Caramoran", "Gigmoto", "Pandan", "Panganiban", "San Andres", "San Miguel", "Viga", "Virac"],
-    "Sorsogon": ["Barcelona", "Bulan", "Bulusan", "Casiguran", "Castilla", "Donsol", "Gubat", "Irosin", "Juban", "Magallanes", "Matnog", "Pilar", "Prieto Diaz", "Santa Magdalena", "Sorsogon City"],
-};
-
-
-    function updateCityMunicipality() {
-      const provinceSelect = document.getElementById("province");
-      const citySelect = document.getElementById("city");
-      const barangaySelect = document.getElementById("barangay");
-      const selectedProvince = provinceSelect.value;
-
-      // Clear existing options in the city dropdown
-      citySelect.innerHTML = '<option value="">Select City/Municipality</option>';
-      barangaySelect.innerHTML = '<option value="">Select Barangay</option>'; // Clear barangay dropdown
-
-      if (selectedProvince && cityMunicipalityData[selectedProvince]) {
-        cityMunicipalityData[selectedProvince].forEach(city => {
-          const option = document.createElement("option");
-          option.value = city;
-          option.textContent = city;
-          citySelect.appendChild(option);
+        municipalitiesAndCities.forEach(cityOrMunicipality => {
+            let option = document.createElement('option');
+            option.value = cityOrMunicipality.code;
+            option.textContent = cityOrMunicipality.name;
+            cityDropdown.appendChild(option);
         });
-      }
-    }
 
-    function updateBarangay() {
-      const citySelect = document.getElementById("city");
-      const barangaySelect = document.getElementById("barangay");
-      const selectedCity = citySelect.value;
+        // Clear barangay dropdown when province changes
+        document.getElementById('barangay').innerHTML = '<option value="">Select Barangay</option>';
+        document.getElementById('barangayText').value = ''; // Clear hidden barangay text
+    });
 
-      // Clear existing options in the barangay dropdown
-      barangaySelect.innerHTML = '<option value="">Select Barangay</option>';
+    // Event listener for City/Municipality selection
+    document.getElementById('city').addEventListener('change', async function () {
+        const municipalityCode = this.value;
+        const municipalityText = this.options[this.selectedIndex].text; // Get the selected municipality text
+        document.getElementById('cityText').value = municipalityText; // Set hidden input value
 
-      if (selectedCity && barangayData[selectedCity]) {
-        barangayData[selectedCity].forEach(barangay => {
-          const option = document.createElement("option");
-          option.value = barangay;
-          option.textContent = barangay;
-          barangaySelect.appendChild(option);
+        const addresses = await loadAddressData();
+
+        // Filter barangays based on selected city/municipality code
+        const barangays = sortAddresses(addresses.filter(
+            address => address.level === 'Bgy' && address.code.startsWith(municipalityCode.slice(0, 6))
+        ));
+
+        const barangayDropdown = document.getElementById('barangay');
+        barangayDropdown.innerHTML = '<option value="">Select Barangay</option>';
+
+        barangays.forEach(barangay => {
+            let option = document.createElement('option');
+            option.value = barangay.code;
+            option.textContent = barangay.name;
+            barangayDropdown.appendChild(option);
         });
-      }
-    }
+    });
+
+    // Event listener for Barangay selection
+    document.getElementById('barangay').addEventListener('change', function () {
+        const barangayText = this.options[this.selectedIndex].text; // Get the selected barangay text
+        document.getElementById('barangayText').value = barangayText; // Set hidden input value
+    });
+});
+
+// Initialize provinces on page load
+populateProvinces();
 
 
     
@@ -817,7 +997,6 @@ const cityMunicipalityData = {
 
      // Function to print QR Code
 function printQR() {
-    var qrImageSrc = '<?php echo $vendor_list; ?>'; // Get the image source
     var logoSrc = 'pics/bangketicket.png'; // Path to your logo image
     var printWindow = window.open('', '_blank');
     printWindow.document.write('<html><head><title>Print QR Code</title></head><body style="text-align:center;">');
@@ -825,11 +1004,15 @@ function printQR() {
     // Modify the size of the logo using inline CSS styles
     printWindow.document.write('<img src="' + logoSrc + '" alt="Logo" style="display:block; margin: 20px auto; max-width: 200px; width: 100%;">');
 
-    // Display the QR Code
-    printWindow.document.write('<img src="' + qrImageSrc + '" alt="QR Code" onload="window.print();window.close()">');
+    // Optional: Add any other content you want to print, but exclude the QR Code
+    printWindow.document.write('<h2>Vendor Registration Details</h2>');
+    printWindow.document.write('<p>Thank you for registering as a vendor. You will receive your QR code separately.</p>');
+
     printWindow.document.write('</body></html>');
     printWindow.document.close();
+    printWindow.print();
 }
+
 // Auto capitalize first letter of first and last names
 document.getElementById("firstName").addEventListener("input", function() {
   this.value = this.value.charAt(0).toUpperCase() + this.value.slice(1).toLowerCase();
@@ -854,6 +1037,32 @@ document.getElementById("userInfoForm").addEventListener("submit", function(even
     event.preventDefault();
   }
 });
+
+        // Function to open the logout modal
+        function openLogoutModal() {
+            var logoutModal = document.getElementById("logoutModal");
+            logoutModal.style.display = "block";
+        }
+
+        // Function to close the logout modal
+        function closeLogoutModal() {
+            var logoutModal = document.getElementById("logoutModal");
+            logoutModal.style.display = "none";
+        }
+
+        // Function to confirm the logout
+        function confirmLogout() {
+            window.location.href = 'index.html'; // Redirect to your logout page
+        }
+
+        // Ensure the logout modal closes when clicking outside of it
+        window.onclick = function(event) {
+            var logoutModal = document.getElementById("logoutModal");
+            if (event.target == logoutModal) {
+                closeLogoutModal();
+            }
+        };
+</script>
 </script>
 
 </body>

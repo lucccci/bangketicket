@@ -1,6 +1,16 @@
 <?php
 // Database connection
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
+
 include 'config.php';
+
+// Fetch admin details
+$sql = "SELECT profile_pic FROM admin_account LIMIT 1";
+$result = $conn->query($sql);
+$admin = $result->fetch_assoc();
+$defaultProfilePic = 'uploads/9131529.png'; // Default profile picture path
+$adminProfilePic = !empty($admin['profile_pic']) ? $admin['profile_pic'] : $defaultProfilePic;
 
 // Handle filtering by vendor ID, vendor name, or collector ID
 $filter_type = isset($_POST['filter_type']) ? $_POST['filter_type'] : '';
@@ -68,81 +78,80 @@ $collectorResult = $conn->query($collectorQuery);
         body {
             font-family: 'Open Sans', sans-serif;
         }
-     /* Sidebar */
-.side-menu {
-    width: 260px;
-    height: 100vh;
-    background-color: #fff;
-    color: #031F4E;
-    position: fixed;
-    top: 0;
-    left: 0;
-    z-index: 1000;
-    overflow-y: auto;
-    overflow-x:hidden;
-    transition: width 0.3s;
-    padding: 2px;
-}
-
-.side-menu .logo {
-    text-align: center;
-    padding: 20px;
-}
-
-.side-menu .logo img {
-    max-width: 100%;
-    height: auto;
-}
-
-.side-menu a {
-    display: flex;
-    align-items: center;
-    padding: 15px 20px;
-    color: #031F4E;
-    text-decoration: none;
-    transition: background 0.3s ease, color 0.3s ease, transform 0.2s ease-in-out; /* Smooth transitions for hover */
-}
-
-.side-menu a:hover {
-    background-color: #2A416F;
-    color: #fff;
-
-}
-
-
-.side-menu a i {
-    margin-right: 10px;
-}
-
-.side-menu a.active {
-    background-color: #031F4E;
-    color: #fff;
-}
-
-.side-menu a.active i {
-    color: #fff;
-}
-
-.side-menu a:hover:not(.active) {
-    background-color: #2A416F;
-    color: #fff;
-}
-
-
-.logout {
-            color: #e74c3c; /* Log Out link color */
-            padding: 15px 20px; /* Padding for Log Out link */
-            margin-top: 215px; /* Add space above Log Out link */
-            display: flex; /* Ensure the icon and text align properly */
-            align-items: center; /* Center align the icon and text vertically */
-            transition: background 0.3s, color 0.3s; /* Transition effects */
-        }
-
-        .logout:hover {
-    background-color: #c0392b;
-    color: #fff;
-    transform: translateX(10px); /* Slide effect on hover for logout */
-}
+            /* Sidebar */
+            .side-menu {
+                display: flex;
+                flex-direction: column;
+                width: 260px;
+                height: 100vh;
+                background-color: #fff;
+                color: #031F4E;
+                position: fixed;
+                top: 0;
+                left: 0;
+                z-index: 1000;
+                overflow-y: hidden;
+                overflow-x: hidden;
+                padding: 2px;
+            }
+    
+            .side-menu .logo {
+                text-align: center;
+                padding: 20px;
+            }
+    
+            .side-menu .logo img {
+                max-width: 100%;
+                height: auto;
+            }
+    
+            .side-menu a {
+                display: flex;
+                align-items: center;
+                padding: 15px 20px;
+                color: #031F4E;
+                text-decoration: none;
+                transition: background 0.3s ease, color 0.3s ease, transform 0.2s ease-in-out;
+            }
+    
+            .side-menu a:hover {
+                background-color: #2A416F;
+                color: #fff;
+                transform: translateX(10px); /* Slide to the right on hover */
+            }
+    
+            .side-menu a i {
+                margin-right: 10px;
+            }
+    
+            .side-menu a.active {
+                background-color: #031F4E;
+                color: #fff;
+            }
+    
+            .side-menu a.active i {
+                color: #fff;
+            }
+    
+            .side-menu a:hover:not(.active) {
+                background-color: #2A416F;
+                color: #fff;
+            }
+    
+            .side-menu .logout {
+                padding: 15px 20px;
+                margin-top: 215px;
+                display: flex;
+                align-items: center;
+                transition: background 0.3s, color 0.3s;
+                transition: background 0.3s, color 0.3s;
+                margin-top: auto; /* Ensures logout stays at the bottom */
+            }
+    
+            .logout:hover {
+                background-color: #c0392b;
+                color: #fff;
+            }
         /* Set a fixed height for the dropdown and enable internal scrolling */
 .dropdown-content {
     display: none;
@@ -158,19 +167,23 @@ $collectorResult = $conn->query($collectorQuery);
         .main {
             font-family: 'Poppins', sans-serif;
             position: absolute;
-            top: 60px;
+            top: 50px;
             width: 80%;
             left: 260px;
             min-height: 86%;
             background: #F2F7FC;
             padding: 20px;
+                overflow-x: hidden;
+             overflow-y: hidden;
         }
         .panel {
             background-color: #ffffff;
-            padding: 20px;
+            padding: 15px;
             border-radius: 10px;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-            margin-bottom: 20px;
+              overflow-x: hidden;
+             overflow-y: hidden;
+            
             width: auto;
         }
         .collector-table {
@@ -450,40 +463,157 @@ $collectorResult = $conn->query($collectorQuery);
 }
 
 .header-panel {
-  display: flex; /* Use flexbox for easy alignment */
-  justify-content: flex-end; /* Align items to the right */
-  align-items: center; /* Center vertically */
-  padding: 0px; /* Add some padding */
-  background-color: #031F4E;
+  display: flex;
+              justify-content: space-between; /* Aligns title and icon on opposite sides */
+              align-items: center; /* Centers items vertically */
+              padding: 10px 40px; /* Adds padding for aesthetics */
+              background-color: #031F4E; /* Background color for the header */
+              color: #fff; /* Text color */
+              position: fixed; /* Fixes the header at the top */
+              top: 0; /* Aligns the header with the top of the viewport */
+              left: 260px; /* Aligns header with the main content */
+              width: calc(100% - 260px); /* Full width minus the sidebar */
+              height: 40px; /* Set a fixed height for the header */
+              z-index: 1001; /* Stays above the sidebar */
 }
 
 .profile-icon {
-  width: 40px; /* Set the width of the icon */
-  height: 40px; /* Set the height of the icon */
-  cursor: pointer; /* Change cursor to pointer on hover */
-  margin-right: 10px; 
+    width: 40px; /* Set the width of the icon */
+    height: 40px; /* Set the height of the icon */
+    cursor: pointer; /* Change cursor to pointer on hover */
+    margin-left: 1170px; /* Space between the icon and the edge */
 }
 
 .profile-icon:hover {
-  opacity: 0.8; /* Change opacity on hover for a slight effect */
+    opacity: 0.8; /* Change opacity on hover for a slight effect */
 }
 
+        .user-icon {
+    width: 40px; /* Set a fixed width for the icon */
+    height: 40px; /* Set a fixed height for the icon */
+    border-radius: 50%; /* Makes the icon circular */
+    margin-left: -145%; /* Aligns the icon in the header */
+    transition: transform 0.3s ease, box-shadow 0.3s ease; /* Smooth transition for the hover effect */
+}
 
+.user-icon:hover {
+    transform: scale(1.1); /* Slightly increase the size of the icon on hover */
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.2); /* Adds a shadow effect on hover */
+}
+/* Style for the Logout Modal */
+.logout-modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent background */
+    overflow: hidden;
+    animation: fadeIn 0.3s ease-out; /* Animation for the background */
+}
+
+.logout-modal-content {
+    background-color: white;
+    margin: 5% auto; /* Consistent margin to position it higher */
+    padding: 20px;
+    border: 1px solid #888;
+    width: 30%;
+    max-width: 400px;
+    border-radius: 8px;
+    position: relative;
+    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+    text-align: center;
+    transition: all 0.3s ease;
+    animation: slideDown 0.3s ease-out; /* Animation for the modal content */
+}
+
+.logout-modal h2 {
+    margin-top: 0;
+    font-size: 1.5rem;
+    color: #031F4E; /* Match the theme color */
+}
+
+.logout-modal p {
+    font-size: 1rem;
+    color: #333;
+    margin: 10px 0 20px;
+}
+
+.logout-modal .modal-actions button {
+    padding: 10px 20px;
+    margin: 0 5px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: all 0.3s ease;
+}
+
+.logout-modal .modal-actions button:first-child {
+    background-color: #031F4E;
+    color: #fff;
+}
+
+.logout-modal .modal-actions button:first-child:hover {
+    background-color: #2A416F;
+}
+
+.logout-modal .modal-actions button:last-child {
+    background-color: #ddd;
+    color: #333;
+}
+
+.logout-modal .modal-actions button:last-child:hover {
+    background-color: #bbb;
+}
+
+.logout-modal .close-logout-modal {
+    position: absolute;
+    top: 10px;
+    right: 15px;
+    font-size: 18px;
+    cursor: pointer;
+    color: #333;
+    background-color: transparent;
+    border: none;
+}
+.logout-modal .close-logout-modal:hover {
+    color: #f44336;
+}
+
+/* Keyframe animations */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-20px); /* Start slightly above */
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0); /* Slide into place */
+    }
+}
         
     </style>
 </head>
 <body>
-<div class="header-panel">
-        <a href="admin_profile.php">
-            <img src="pics/icons8-test-account-100.png" alt="Profile Icon" class="profile-icon">
-        </a>
-    </div>
+
 <!-- Side Menu -->
 <div id="sideMenu" class="side-menu">
     <div class="logo">
         <img src="pics/logo.png" alt="Logo">
     </div>
-    <a href="dashboard.html">
+    <a href="dashboard.php">
         <span class="material-icons" style="vertical-align: middle; font-size: 18px;">dashboard</span>
         <span style="margin-left: 8px;">Dashboard</span>
     </a>
@@ -507,7 +637,15 @@ $collectorResult = $conn->query($collectorQuery);
     <a href="archive.php"><i class="fas fa-archive"></i> Archive</a>
 
     <!-- Log Out Link -->
-    <a href="index.html" class="logout"><i class="fas fa-sign-out-alt"></i> Log Out</a>
+    <a href="#" class="logout" onclick="openLogoutModal()"><i class="fas fa-sign-out-alt"></i> Log Out</a>
+</div>
+
+
+  <div class="header-panel">
+    <div class="header-title"></div>
+    <a href="admin_profile.php">
+        <img src="<?php echo htmlspecialchars($adminProfilePic); ?>" alt="User Icon" class="user-icon" onerror="this.src='uploads/9131529.png'">
+    </a>
 </div>
 
 <!-- Collector Table -->
@@ -549,15 +687,16 @@ $collectorResult = $conn->query($collectorQuery);
             </thead>
             <tbody>
             <?php
-            if ($result->num_rows > 0) {
+          if ($result->num_rows > 0) {
                 while($row = $result->fetch_assoc()) {
                     echo "<tr>";
                     echo "<td>" . $row['transactionID'] . "</td>";
-                    echo "<td>" . $row['vendorID'] . "</td>";
+                    echo "<td><strong>" . $row['vendorID'] . "</strong></td>"; // Bold the Vendor ID
                     echo "<td>" . $row['vendor_name'] . "</td>";
                     echo "<td>" . $row['date'] . "</td>";
                     echo "<td>₱" . number_format($row['amount'], 2) . "</td>";
-                    echo "<td>" . $row['collector_id'] . "</td>";
+                     // Change the color and bold the Collector ID
+        echo "<td><span style='color: #2A416F; font-weight: bold;text-decoration: underline;'>" . $row['collector_id'] . "</span></td>"; 
                     echo "</tr>";
                 }
             } else {
@@ -615,7 +754,20 @@ $collectorResult = $conn->query($collectorQuery);
         echo "<button disabled>No collectors available</button>";
     }
     ?>
+    <button onclick="location.href='generate_report_collection.php?report_type=all_collectors'">All Collectors</button>
     <button onclick="toggleCollectorDropdown()">Cancel</button>
+</div>
+    <!-- Logout Modal -->
+<div id="logoutModal" class="logout-modal">
+    <div class="logout-modal-content">
+        <span class="close-logout-modal" onclick="closeLogoutModal()">&times;</span>
+        <h2>Confirm Logout</h2>
+        <p>Are you sure you want to log out?</p>
+        <div class="modal-actions">
+            <button onclick="confirmLogout()">Yes, Log Out</button>
+            <button onclick="closeLogoutModal()">Cancel</button>
+        </div>
+    </div>
 </div>
 
 <script>
@@ -636,6 +788,31 @@ $collectorResult = $conn->query($collectorQuery);
         var dropdown = document.getElementById("collector-dropdown");
         dropdown.style.display = (dropdown.style.display === "block") ? "none" : "block";
     }
+            // Function to open the logout modal
+        function openLogoutModal() {
+            var logoutModal = document.getElementById("logoutModal");
+            logoutModal.style.display = "block";
+        }
+
+        // Function to close the logout modal
+        function closeLogoutModal() {
+            var logoutModal = document.getElementById("logoutModal");
+            logoutModal.style.display = "none";
+        }
+
+        // Function to confirm the logout
+        function confirmLogout() {
+            window.location.href = 'index.html'; // Redirect to your logout page
+        }
+
+        // Ensure the logout modal closes when clicking outside of it
+        window.onclick = function(event) {
+            var logoutModal = document.getElementById("logoutModal");
+            if (event.target == logoutModal) {
+                closeLogoutModal();
+            }
+        };
+</script>
 </script>
 
 </body>

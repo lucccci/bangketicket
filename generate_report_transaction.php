@@ -43,7 +43,7 @@ if ($reportType == 'by_collector') {
 
         $output = fopen('php://output', 'w');
 
-        // Output column headings (without collector)
+        // Output column headings
         fputcsv($output, ['Transaction ID', 'Vendor ID', 'Vendor Name', 'Date', 'Amount']);
 
         // Write data rows
@@ -57,6 +57,7 @@ if ($reportType == 'by_collector') {
                 $row['date'],
                 $row['amount']
             ]);
+            // Accumulate total amount for the specific collector only
             $totalAmount += $row['amount'];
         }
 
@@ -69,7 +70,81 @@ if ($reportType == 'by_collector') {
         echo "No transactions found for the selected collector today.";
     }
     exit();
-} elseif ($reportType == 'by_date') {
+}
+elseif ($reportType == 'all_collectors') {
+    // Query to get all transactions grouped by collector for today
+    $sql = "SELECT vt.transactionID, vt.vendorID, 
+                   CONCAT(vl.fname, ' ', vl.mname, ' ', vl.lname) AS vendor_name, 
+                   vt.date, vt.amount, vt.collector_id, 
+                   CONCAT(c.fname, ' ', c.lname) AS collector_name
+            FROM vendor_transaction vt
+            JOIN vendor_list vl ON vt.vendorID = vl.vendorID
+            JOIN collectors c ON vt.collector_id = c.collector_id
+            WHERE DATE(vt.date) = CURDATE() 
+            ORDER BY c.collector_id, vt.date ASC"; // Only get today's transactions
+            
+    $filename = "AllCollectorsTransactions_For" . date('Y-m-d') . ".csv";
+
+    // Execute the query
+    $result = $conn->query($sql);
+
+    // Check if there are results
+    if ($result && $result->num_rows > 0) {
+        // Create a CSV file for all collectors' transactions
+        header('Content-Type: text/csv');
+        header('Content-Disposition: attachment; filename="' . $filename . '"');
+
+        $output = fopen('php://output', 'w');
+
+        // Output column headings
+        fputcsv($output, ['Collectors Collection for ' . date('Y-m-d')]);
+
+        $currentCollector = ''; // Track the current collector
+        $collectorTotal = 0; // Initialize the total for the current collector
+
+        while ($row = $result->fetch_assoc()) {
+            if ($currentCollector !== $row['collector_name']) {
+                // If not the first collector, add the total for the previous collector before switching to the new one
+                if (!empty($currentCollector)) {
+                    // Write the total for the previous collector
+                    fputcsv($output, ['Total for ' . $currentCollector, '', '', '', '', $collectorTotal]);
+                    fputcsv($output, []); // Empty row to separate collector sections
+                }
+                // Write the collector name as a heading
+                fputcsv($output, ["Transactions for " . $row['collector_name']]);
+                // Write the column headers for the transactions under this collector
+                fputcsv($output, ['Transaction ID', 'Vendor ID', 'Vendor Name', 'Date', 'Amount']);
+                $currentCollector = $row['collector_name']; // Update current collector
+                $collectorTotal = 0; // Reset the total for the new collector
+            }
+
+            // Write the transaction data
+            fputcsv($output, [
+                $row['transactionID'],
+                $row['vendorID'],
+                $row['vendor_name'],
+                $row['date'],
+                $row['amount']
+            ]);
+
+            // Accumulate the total amount for the current collector
+            $collectorTotal += $row['amount'];
+        }
+
+        // Write the total for the last collector
+        if (!empty($currentCollector)) {
+            fputcsv($output, ['Total for ' . $currentCollector, '', '', '', '', $collectorTotal]);
+        }
+
+        // Close output stream
+        fclose($output);
+    } else {
+        echo "No transactions found for any collector today.";
+    }
+    exit();
+}
+
+ elseif ($reportType == 'by_date') {
     // Generate a report for today's transactions
     $date = date('Y-m-d'); // Current date
     $sql = "SELECT t.transactionID, t.vendorID, v.lname, v.fname, v.mname, t.amount

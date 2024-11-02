@@ -2,6 +2,13 @@
 // Database connection
 include 'config.php';
 
+// Fetch admin details
+$sql = "SELECT profile_pic FROM admin_account LIMIT 1";
+$result = $conn->query($sql);
+$admin = $result->fetch_assoc();
+$defaultProfilePic = 'uploads/9131529.png'; // Default profile picture path
+$adminProfilePic = !empty($admin['profile_pic']) ? $admin['profile_pic'] : $defaultProfilePic;
+
 // SQL query to get data from the archive_collectors table
 $sql = "SELECT collector_id, fname AS first_name, mname AS middle_name, lname AS last_name, suffix, birthday FROM archive_collectors";
 $result = $conn->query($sql);
@@ -48,68 +55,87 @@ $archivedCollectorsResult = $conn->query("SELECT * FROM archive_collectors ORDER
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Archived Collectors</title>
     <style>
-       
-      /* Sidebar */
-.side-menu {
-    font-family: 'poppins', sans-serif;
-    width: 260px;
-    height: 100vh;
-    background-color: #fff;
-    color: #031F4E;
-    position: fixed;
-    top: 0;
-    left: 0;
-    z-index: 1000;
-    overflow-y: auto;
-    overflow-x:hidden;
-    transition: width 0.3s;
-    padding: 2px;
-}
-
-.side-menu .logo {
-    text-align: center;
-    padding: 20px;
-}
-
-.side-menu .logo img {
-    max-width: 100%;
-    height: auto;
-}
-
-.side-menu a {
-    display: flex;
-    align-items: center;
-    padding: 15px 20px;
-    color: #031F4E;
-    text-decoration: none;
-    transition: background 0.3s ease, color 0.3s ease, transform 0.2s ease-in-out; /* Smooth transitions for hover */
-}
-
-.side-menu a:hover {
-    background-color: #2A416F;
-    color: #fff;
-    transform: translateX(10px); /* Slide to the right on hover */
-   
-}
-
-
-.side-menu a i {
-    margin-right: 10px;
-}
-
-.side-menu a.active {
-    background-color: #031F4E;
-    color: #fff;
-}
-
-.side-menu a.active i {
-    color: #fff;
-}
-
-.side-menu a:hover:not(.active) {
-    background-color: #2A416F;
-    color: #fff;
-}
+        body {
+                margin: 0;
+                font-family: 'Poppins', sans-serif;
+                background-color: #F2F7FC;
+                position: relative;
+            }
+            /* Sidebar */
+            .side-menu {
+                font-family: 'Poppins', sans-serif;
+                display: flex;
+                flex-direction: column;
+                width: 260px;
+                height: 100vh;
+                background-color: #fff;
+                color: #031F4E;
+                position: fixed;
+                top: 0;
+                left: 0;
+                z-index: 1000;
+                overflow-y: hidden;
+                overflow-x: hidden;
+                padding: 2px;
+            }
+    
+            .side-menu .logo {
+                text-align: center;
+                padding: 20px;
+            }
+    
+            .side-menu .logo img {
+                max-width: 100%;
+                height: auto;
+            }
+    
+            .side-menu a {
+                display: flex;
+                align-items: center;
+                padding: 15px 20px;
+                color: #031F4E;
+                text-decoration: none;
+                transition: background 0.3s ease, color 0.3s ease, transform 0.2s ease-in-out;
+            }
+    
+            .side-menu a:hover {
+                background-color: #2A416F;
+                color: #fff;
+                transform: translateX(10px); /* Slide to the right on hover */
+            }
+    
+            .side-menu a i {
+                margin-right: 10px;
+            }
+    
+            .side-menu a.active {
+                background-color: #031F4E;
+                color: #fff;
+            }
+    
+            .side-menu a.active i {
+                color: #fff;
+            }
+    
+            .side-menu a:hover:not(.active) {
+                background-color: #2A416F;
+                color: #fff;
+            }
+    
+            .side-menu .logout {
+                padding: 15px 20px;
+                margin-top: 215px;
+                display: flex;
+                align-items: center;
+                transition: background 0.3s, color 0.3s;
+                transition: background 0.3s, color 0.3s;
+                margin-top: auto; /* Ensures logout stays at the bottom */
+            }
+    
+            .logout:hover {
+                background-color: #c0392b;
+                color: #fff;
+            }
 
         /* Pagination styles */
         .pagination {
@@ -290,24 +316,33 @@ $archivedCollectorsResult = $conn->query("SELECT * FROM archive_collectors ORDER
     color: #fff; /* Ensure text color remains white */
     transform: scale(1.05); /* Slightly enlarge the button on hover */
 }
+
 .header-panel {
-  display: flex; /* Use flexbox for easy alignment */
-  justify-content: flex-end; /* Align items to the right */
-  align-items: center; /* Center vertically */
-  padding: 0px; /* Add some padding */
-  background-color: #031F4E;
+  display: flex;
+              justify-content: space-between; /* Aligns title and icon on opposite sides */
+              align-items: center; /* Centers items vertically */
+              padding: 10px 40px; /* Adds padding for aesthetics */
+              background-color: #031F4E; /* Background color for the header */
+              color: #fff; /* Text color */
+              position: fixed; /* Fixes the header at the top */
+              top: 0; /* Aligns the header with the top of the viewport */
+              left: 260px; /* Aligns header with the main content */
+              width: calc(100% - 260px); /* Full width minus the sidebar */
+              height: 40px; /* Set a fixed height for the header */
+              z-index: 1001; /* Stays above the sidebar */
 }
 
 .profile-icon {
-  width: 40px; /* Set the width of the icon */
-  height: 40px; /* Set the height of the icon */
-  cursor: pointer; /* Change cursor to pointer on hover */
-  margin-right: 10px; /* Space between the icon and the edge */
+    width: 40px; /* Set the width of the icon */
+    height: 40px; /* Set the height of the icon */
+    cursor: pointer; /* Change cursor to pointer on hover */
+    margin-left: 1170px; /* Space between the icon and the edge */
 }
 
 .profile-icon:hover {
-  opacity: 0.8; /* Change opacity on hover for a slight effect */
+    opacity: 0.8; /* Change opacity on hover for a slight effect */
 }
+
 .back-button {
    
     color: black; /* White text */
@@ -328,23 +363,309 @@ $archivedCollectorsResult = $conn->query("SELECT * FROM archive_collectors ORDER
 .back-button:hover {
     background-color: #6B8CAE; /* Darker grey on hover */
 }
+h2 {
+    margin-right:65%;
+}
+        .user-icon {
+    width: 40px; /* Set a fixed width for the icon */
+    height: 40px; /* Set a fixed height for the icon */
+    border-radius: 50%; /* Makes the icon circular */
+    margin-left: -144%; /* Aligns the icon in the header */
+    transition: transform 0.3s ease, box-shadow 0.3s ease; /* Smooth transition for the hover effect */
+}
+
+.user-icon:hover {
+    transform: scale(1.1); /* Slightly increase the size of the icon on hover */
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.2); /* Adds a shadow effect on hover */
+}
+
+/* Style for the Logout Modal */
+.logout-modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent background */
+    overflow: hidden;
+    animation: fadeIn 0.3s ease-out; /* Animation for the background */
+    font-family: 'Poppins', sans-serif; /* Match overall theme */
+}
+
+.logout-modal-content {
+    background-color: white;
+    margin: 5% auto; /* Consistent margin to position it higher */
+    padding: 20px;
+    border: 1px solid #888;
+    width: 30%;
+    max-width: 400px;
+    border-radius: 8px;
+    position: relative;
+    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+    text-align: center;
+    transition: all 0.3s ease;
+    animation: slideDown 0.3s ease-out; /* Animation for the modal content */
+}
+
+.logout-modal h2 {
+    margin-top: 0;
+    font-size: 1.5rem;
+    color: #031F4E; /* Match the theme color */
+    margin: auto;
+}
+
+.logout-modal p {
+    font-size: 1rem;
+    color: #333;
+    margin: 10px 0 20px;
+}
+
+.logout-modal .modal-actions button {
+    padding: 10px 20px;
+    margin: 0 5px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: all 0.3s ease;
+}
+
+.logout-modal .modal-actions button:first-child {
+    background-color: #031F4E;
+    color: #fff;
+}
+
+.logout-modal .modal-actions button:first-child:hover {
+    background-color: #2A416F;
+}
+
+.logout-modal .modal-actions button:last-child {
+    background-color: #ddd;
+    color: #333;
+}
+
+.logout-modal .modal-actions button:last-child:hover {
+    background-color: #bbb;
+}
+
+.logout-modal .close-logout-modal {
+    position: absolute;
+    top: 10px;
+    right: 15px;
+    font-size: 18px;
+    cursor: pointer;
+    color: #333;
+    background-color: transparent;
+    border: none;
+}
+.logout-modal .close-logout-modal:hover {
+    color: #f44336;
+}
+
+/* Message Div Styling */
+
+h4 {
+    font-size: 24px; /* Set the font size */
+    font-weight: bold; /* Make the text bold */
+    margin-top: 0; /* Remove the default top margin */
+    margin-bottom: 15px; /* Add space below the heading */
+    color: #black; /* Set a dark text color */
+    text-align: center; /* Center the text */
+}
+
+.success-message {
+    display: none; /* Initially hidden */
+    background-color: #d4edda; /* Light green background */
+    color: #155724; /* Dark green text */
+    padding: 15px; /* Some padding around the text */
+    margin: 20px 0; /* Margin to separate from other elements */
+    border: 1px solid #c3e6cb; /* Border to match the background */
+    border-radius: 4px; /* Rounded corners */
+    text-align: center; /* Center the text */
+    font-weight: bold; /* Bold text for emphasis */
+}
+
+/* Modal Styling */
+.restore-modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0);
+    z-index: 1000;
+    animation: fadeIn 0.3s ease-in-out;
+}
+
+.restore-content {
+    position: relative;
+    background-color: #fff;
+    width: 90%;
+    max-width: 400px;
+    margin: 9vh auto;
+    padding: 25px;
+    border-radius: 12px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+    transform: scale(0.7);
+    opacity: 0;
+    animation: scaleIn 0.3s ease-in-out forwards;
+}
+
+
+/* Close Button */
+.custom-close {
+    position: absolute;
+    right: 20px;
+    top: 15px;
+    font-size: 24px;
+    cursor: pointer;
+    color: #666;
+    transition: color 0.2s ease;
+}
+
+.custom-close:hover {
+    color: #ff4444;
+}
+
+/* Modal Header */
+.restore-content h4 {
+    margin: 0 0 20px 0;
+    color: black;
+    font-size: 1.5em;
+    font-weight: 600;
+}
+
+/* Modal Paragraph */
+.restore-content p {
+    color: #666; /* Set the text color to a medium gray */
+    margin-bottom: 25px; /* Add space below the paragraph */
+    line-height: 1.5; /* Set line height for better readability */
+    text-align: center; /* Center the text within the paragraph */
+}
+
+
+/* Action Buttons Container */
+.restore-actions {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+}
+
+/* Button Styling */
+.restore-actions button {
+    padding: 10px 24px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+#confirmRestoreCollectorBtn {
+    background-color: #2A416F;; /* Green background for submit */
+    color: white; /* White text */
+    padding: 10px 15px; /* Padding for the button */
+    border: none; /* Remove default border */
+    border-radius: 4px; /* Rounded corners */
+    cursor: pointer; /* Pointer cursor on hover */
+    transition: background-color 0.3s, transform 0.3s; /* Smooth transition */
+}
+
+#confirmRestoreCollectorBtn:hover {
+   background-color:  #031F4E; /* Darker green on hover */
+    transform: scale(1.05); /* Slightly enlarge on hover */
+}
+
+#cancelRestoreCollectorBtn {
+       background-color: transparent; /* No background color */
+    border: 2px solid #2A416F; /* Blue border */
+    color: #2A416F; /* Text color matching the border */
+    padding: 8px 12px; /* Padding for buttons */
+    border-radius: 4px; /* Rounded corners */
+    cursor: pointer; /* Pointer cursor on hover */
+    transition: background-color 0.3s, color 0.3s; /* Smooth transition */
+}
+
+#cancelRestoreCollectorBtn:hover {
+    background-color: #d32f2f; /* Darker red on hover */
+    color:#ffff;
+}
+/* Animations */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes scaleIn {
+    from {
+        transform: scale(0.7);
+        opacity: 0;
+    }
+    to {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+/* Responsive Design */
+@media (max-width: 480px) {
+    .restore-content {
+        width: 95%;
+        margin: 10vh auto;
+        padding: 20px;
+    }
+    
+    .restore-actions {
+        flex-direction: column;
+    }
+    
+    .restore-actions button {
+        width: 100%;
+        margin: 5px 0;
+    }
+}
+
+
+/* Keyframe animations */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-20px); /* Start slightly above */
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0); /* Slide into place */
+    }
+}
 
 
     </style>
 </head>
 <body>
 
-<div class="header-panel">
-        <a href="admin_profile.php">
-            <img src="pics/icons8-test-account-100.png" alt="Profile Icon" class="profile-icon">
-        </a>
-    </div>
+
 
 <div id="sideMenu" class="side-menu">
     <div class="logo">
         <img src="pics/logo.png" alt="Logo">
     </div>
-    <a href="dashboard.html">
+    <a href="dashboard.php">
         <span class="material-icons" style="vertical-align: middle; font-size: 18px;">dashboard</span>
         <span style="margin-left: 8px;">Dashboard</span>
     </a>
@@ -367,9 +688,16 @@ $archivedCollectorsResult = $conn->query("SELECT * FROM archive_collectors ORDER
     <a href="archive.php" class="active"><i class="fas fa-archive"></i> Archive</a>
 
       <!-- Log Out Link -->
-      <a href="index.html" class="logout"><i class="fas fa-sign-out-alt"></i> Log Out</a>
+    <a href="#" class="logout" onclick="openLogoutModal()"><i class="fas fa-sign-out-alt"></i> Log Out</a>
 </div>
 
+
+  <div class="header-panel">
+    <div class="header-title"></div>
+    <a href="admin_profile.php">
+        <img src="<?php echo htmlspecialchars($adminProfilePic); ?>" alt="User Icon" class="user-icon" onerror="this.src='uploads/9131529.png'">
+    </a>
+</div>
 
 <div class="main">
     <div class="panel">
@@ -402,33 +730,34 @@ $archivedCollectorsResult = $conn->query("SELECT * FROM archive_collectors ORDER
         </tr>
     </thead>
     <tbody>
-        <?php
-        if ($result->num_rows > 0) {
-            // Output data of each row
-            while ($row = $result->fetch_assoc()) {
-                // Check for empty fields and display 'N/A' if necessary
-                $firstName = !empty($row['first_name']) ? $row['first_name'] : 'N/A';
-                $middleName = !empty($row['middle_name']) ? $row['middle_name'] : 'N/A';
-                $lastName = !empty($row['last_name']) ? $row['last_name'] : 'N/A';
-                $suffix = !empty($row['suffix']) ? $row['suffix'] : 'N/A';
-                $birthday = !empty($row['birthday']) ? $row['birthday'] : 'N/A';
+       <?php
+if ($result->num_rows > 0) {
+    // Output data of each row
+    while ($row = $result->fetch_assoc()) {
+        // Check for empty fields and display 'N/A' if necessary
+        $firstName = !empty($row['first_name']) ? $row['first_name'] : 'N/A';
+        $middleName = !empty($row['middle_name']) ? $row['middle_name'] : 'N/A';
+        $lastName = !empty($row['last_name']) ? $row['last_name'] : 'N/A';
+        $suffix = !empty($row['suffix']) ? $row['suffix'] : 'N/A';
+        $birthday = !empty($row['birthday']) ? $row['birthday'] : 'N/A';
 
-                echo "<tr>
-                     <td><strong>" . $row['collector_id'] . "</strong></td>
-                        <td>" . $firstName . "</td>
-                        <td>" . $middleName . "</td>
-                        <td>" . $lastName . "</td>
-                        <td>" . $suffix . "</td>
-                        <td>" . $birthday . "</td>
-                        <td>
-                            <a href='restore_collector.php?id=" . $row['collector_id'] . "' class='restore-btn' onclick='return confirm(\"Are you sure you want to restore this collector?\")'><i class='fas fa-undo'></i></a>
-                        </td>
-                      </tr>";
-            }
-        } else {
-            echo "<tr><td colspan='7'>No records found</td></tr>";
-        }
-        ?>
+        echo "<tr>
+             <td><strong>" . $row['collector_id'] . "</strong></td>
+                <td>" . $firstName . "</td>
+                <td>" . $middleName . "</td>
+                <td>" . $lastName . "</td>
+                <td>" . $suffix . "</td>
+                <td>" . $birthday . "</td>
+                <td>
+                    <a href='#' class='custom-restore-btn' data-href='restore_collector.php?id=" . $row['collector_id'] . "'><i class='fas fa-undo'></i></a>
+                </td>
+              </tr>";
+    }
+} else {
+    echo "<tr><td colspan='7'>No records found</td></tr>";
+}
+?>
+
     </tbody>
 </table>
 
@@ -467,5 +796,107 @@ $archivedCollectorsResult = $conn->query("SELECT * FROM archive_collectors ORDER
 $conn->close();
 ?>
 
+<div id="restoreCollectorModal" class="restore-modal">
+    <div class="restore-content">
+        <span class="custom-close">&times;</span>
+        <h4>Confirm Action</h4>
+        <p>Are you sure you want to restore this collector?</p>
+        <div id="messageDiv" class="success-message" style="display: none;"></div> <!-- Success message container -->
+        <div class="restore-actions">
+            <button id="confirmRestoreCollectorBtn">Confirm</button>
+            <button id="cancelRestoreCollectorBtn">Cancel</button>
+        </div>
+    </div>
+</div>
+
+    <!-- Logout Modal -->
+<div id="logoutModal" class="logout-modal">
+    <div class="logout-modal-content">
+        <span class="close-logout-modal" onclick="closeLogoutModal()">&times;</span>
+        <h2>Confirm Logout</h2>
+        <p>Are you sure you want to log out?</p>
+        <div class="modal-actions">
+            <button onclick="confirmLogout()">Yes, Log Out</button>
+            <button onclick="closeLogoutModal()">Cancel</button>
+        </div>
+    </div>
+</div>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const restoreButtons = document.querySelectorAll('.custom-restore-btn');
+    const modal = document.getElementById('restoreCollectorModal');
+    const confirmBtn = document.getElementById('confirmRestoreCollectorBtn');
+    const cancelBtn = document.getElementById('cancelRestoreCollectorBtn');
+    const closeBtn = document.querySelector('.custom-close');
+    const messageDiv = document.getElementById('messageDiv');
+    let currentHref = '';
+
+    restoreButtons.forEach(button => {
+        button.addEventListener('click', function (event) {
+            event.preventDefault(); // Prevent default link behavior
+            currentHref = this.getAttribute('data-href'); // Get the href from data attribute
+            modal.style.display = 'block'; // Show the modal
+        });
+    });
+
+    confirmBtn.addEventListener('click', function () {
+        // Show success message
+        messageDiv.className = 'success-message'; // Add success message class
+        messageDiv.textContent = 'Collector restored successfully.';
+        messageDiv.style.display = 'block'; // Show the message
+
+        // Hide the buttons and other content
+        confirmBtn.style.display = 'none';
+        cancelBtn.style.display = 'none';
+
+        // Redirect after showing the message for 2 seconds
+        setTimeout(() => {
+            window.location.href = 'collector.php'; // Redirect to collector.php
+        }, 2000); // Wait for 2 seconds before redirecting
+    });
+
+    cancelBtn.addEventListener('click', function () {
+        modal.style.display = 'none'; // Hide the modal
+    });
+
+    closeBtn.addEventListener('click', function () {
+        modal.style.display = 'none'; // Hide the modal
+    });
+
+    // Close the modal when clicking outside of it
+    window.onclick = function (event) {
+        if (event.target == modal) {
+            modal.style.display = 'none';
+        }
+    };
+});
+
+
+            // Function to open the logout modal
+        function openLogoutModal() {
+            var logoutModal = document.getElementById("logoutModal");
+            logoutModal.style.display = "block";
+        }
+
+        // Function to close the logout modal
+        function closeLogoutModal() {
+            var logoutModal = document.getElementById("logoutModal");
+            logoutModal.style.display = "none";
+        }
+
+        // Function to confirm the logout
+        function confirmLogout() {
+            window.location.href = 'index.html'; // Redirect to your logout page
+        }
+
+        // Ensure the logout modal closes when clicking outside of it
+        window.onclick = function(event) {
+            var logoutModal = document.getElementById("logoutModal");
+            if (event.target == logoutModal) {
+                closeLogoutModal();
+            }
+        };
+</script>
+</script>
 </body>
 </html>

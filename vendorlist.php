@@ -2,6 +2,14 @@
 require_once 'config.php';
 require_once 'phpqrcode/qrlib.php';
 
+
+// Fetch admin details
+$sql = "SELECT profile_pic FROM admin_account LIMIT 1";
+$result = $conn->query($sql);
+$admin = $result->fetch_assoc();
+$defaultProfilePic = 'uploads/9131529.png'; // Default profile picture path
+$adminProfilePic = !empty($admin['profile_pic']) ? $admin['profile_pic'] : $defaultProfilePic;
+
 // Function to sanitize input data
 function sanitizeInput($data) {
     return htmlspecialchars(strip_tags(trim($data)));
@@ -87,10 +95,10 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
             if ($stmt->affected_rows > 0) {
                 // Insert the archived vendor data, including the QR image, into the archive_vendors table
-                $insert_sql = "INSERT INTO archive_vendors (vendorID, fname, mname, lname, suffix, gender, birthday, age, contactNo, province, municipality, barangay, houseNo, streetname, qrimage) 
-                               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                $insert_sql = "INSERT INTO archive_vendors (vendorID, fname, mname, lname, suffix, gender, birthday, age, contactNo, lotArea, province, municipality, barangay, houseNo, streetname, qrimage) 
+                               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
                 $stmt = $conn->prepare($insert_sql);
-                $stmt->bind_param("ssssssissssssss", 
+                $stmt->bind_param("ssssssisssssssss", 
                     $vendor_data['vendorID'], 
                     $vendor_data['fname'], 
                     $vendor_data['mname'], 
@@ -99,7 +107,8 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                     $vendor_data['gender'], 
                     $vendor_data['birthday'], 
                     $vendor_data['age'], 
-                    $vendor_data['contactNo'], 
+                    $vendor_data['contactNo'],
+                    $vendor_data['lotArea'],                    
                     $vendor_data['province'], 
                     $vendor_data['municipality'], 
                     $vendor_data['barangay'], 
@@ -127,43 +136,88 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
     
 
-    // Check if the edit form was submitted
-    if (isset($_POST['submit_edit'])) {
-        $vendor_id_to_edit = sanitizeInput($_POST['vendor_id_to_edit']);
-        $edit_fName = sanitizeInput($_POST['edit_fName']);
-        $edit_mname = sanitizeInput($_POST['edit_mname']);
-        $edit_lName = sanitizeInput($_POST['edit_lName']);
-        $edit_suffix = sanitizeInput($_POST['edit_suffix']);
-        $edit_gender = sanitizeInput($_POST['edit_gender']);
-        $edit_birthday = sanitizeInput($_POST['edit_birthday']);
-        $edit_age = sanitizeInput($_POST['edit_age']);
-        $edit_contactNo = sanitizeInput($_POST['edit_contactNo']);
-        $edit_province = sanitizeInput($_POST['edit_province']);
-        $edit_municipality = sanitizeInput($_POST['edit_municipality']);
-        $edit_barangay = sanitizeInput($_POST['edit_barangay']);
-        $edit_houseNo = sanitizeInput($_POST['edit_houseNo']);
-        $edit_streetname = sanitizeInput($_POST['edit_streetname']);
+// Check if the edit form was submitted
+if (isset($_POST['submit_edit'])) {
+    $vendor_id_to_edit = sanitizeInput($_POST['vendor_id_to_edit']);
+    $edit_fName = sanitizeInput($_POST['edit_fName']);
+    $edit_mname = sanitizeInput($_POST['edit_mname']);
+    $edit_lName = sanitizeInput($_POST['edit_lName']);
+    $edit_suffix = sanitizeInput($_POST['edit_suffix']);
+    $edit_gender = sanitizeInput($_POST['edit_gender']);
+    $edit_birthday = sanitizeInput($_POST['edit_birthday']);
+    $edit_age = sanitizeInput($_POST['edit_age']);
+    $edit_contactNo = sanitizeInput($_POST['edit_contactNo']);
+    $edit_lotArea = sanitizeInput($_POST['edit_lotArea']);
+    $edit_houseNo = sanitizeInput($_POST['edit_houseNo']);
+    $edit_streetname = sanitizeInput($_POST['edit_streetname']);
+    
+    // Only update address if new values are provided
+    $edit_province = !empty($_POST['edit_province']) ? sanitizeInput($_POST['edit_province']) : null;
+    $edit_municipality = !empty($_POST['edit_municipality']) ? sanitizeInput($_POST['edit_municipality']) : null;
+    $edit_barangay = !empty($_POST['edit_barangay']) ? sanitizeInput($_POST['edit_barangay']) : null;
 
-        // Update the vendor details in the database
-        $update_sql = "UPDATE vendor_list SET fname=?, mname=?, lname=?, suffix=?, gender=?, birthday=?, age=?, contactNo=?, province=?, municipality=?, barangay=?, houseNo=?, streetname=? WHERE vendorID=?";
-        $stmt = $conn->prepare($update_sql);
-        
-        if ($stmt === false) {
-            echo "<script>alert('Error preparing update statement: " . $conn->error . "');</script>";
-            exit();
-        }
-
-        $stmt->bind_param("ssssssisssssss", $edit_fName, $edit_mname, $edit_lName, $edit_suffix, $edit_gender, $edit_birthday, $edit_age, $edit_contactNo, $edit_province, $edit_municipality, $edit_barangay, $edit_houseNo, $edit_streetname, $vendor_id_to_edit);
-        $stmt->execute();
-
-        if ($stmt->affected_rows > 0) {
-            echo "<script>alert('Vendor details updated successfully.');</script>";
-            header("Location: {$_SERVER['PHP_SELF']}");
-            exit();
-        } else {
-            echo "<script>alert('Error updating vendor details: " . $conn->error . "');</script>";
-        }
+    // Prepare the SQL statement with conditions
+    $update_sql = "UPDATE vendor_list SET 
+                    fname=?, 
+                    mname=?, 
+                    lname=?, 
+                    suffix=?, 
+                    gender=?, 
+                    birthday=?, 
+                    age=?, 
+                    contactNo=?, 
+                    lotArea=?, 
+                    houseNo=?, 
+                    streetname=?";
+    
+    // Append address fields only if new values are provided
+    if ($edit_province) {
+        $update_sql .= ", province=?";
     }
+    if ($edit_municipality) {
+        $update_sql .= ", municipality=?";
+    }
+    if ($edit_barangay) {
+        $update_sql .= ", barangay=?";
+    }
+    
+    $update_sql .= " WHERE vendorID=?";
+
+    $stmt = $conn->prepare($update_sql);
+
+    // Check if the statement was prepared correctly
+    if ($stmt === false) {
+        echo "<script>alert('Error preparing update statement: " . $conn->error . "');</script>";
+        exit();
+    }
+
+    // Bind the parameters dynamically based on provided values
+    $params = [$edit_fName, $edit_mname, $edit_lName, $edit_suffix, $edit_gender, $edit_birthday, $edit_age, $edit_contactNo, $edit_lotArea, $edit_houseNo, $edit_streetname];
+    
+    if ($edit_province) {
+        $params[] = $edit_province;
+    }
+    if ($edit_municipality) {
+        $params[] = $edit_municipality;
+    }
+    if ($edit_barangay) {
+        $params[] = $edit_barangay;
+    }
+    
+    $params[] = $vendor_id_to_edit;
+    
+    // Use call_user_func_array to bind the parameters
+    $stmt->bind_param(str_repeat("s", count($params)), ...$params);
+    $stmt->execute();
+
+    if ($stmt->affected_rows > 0) {
+        echo "<script>alert('Vendor details updated successfully.');</script>";
+        header("Location: {$_SERVER['PHP_SELF']}");
+        exit();
+    } else {
+        echo "<script>alert('Error updating vendor details: " . $conn->error . "');</script>";
+    }
+}
 }
 ?>
 
@@ -188,82 +242,80 @@ body {
     overflow: auto; /* Prevent any scrolling */
 }
 
-/* Sidebar */
-.side-menu {
-  width: 260px;
-  height: 100vh;
-  background-color: #fff;
-  color: #031F4E;
-  position: fixed;
-  top: 0;
-  left: 0;
-  z-index: 1000;
-  overflow-y: auto;
-  overflow-x:hidden;
-
-  padding: 2px;
-}
-
-.side-menu .logo {
-  text-align: center;
-  padding: 20px;
-}
-
-.side-menu .logo img {
-  max-width: 100%;
-  height: auto;
-}
-
-.side-menu a {
-  display: flex;
-  align-items: center;
-  padding: 15px 20px;
-  color: #031F4E;
-  text-decoration: none;
-  transition: background 0.3s ease, color 0.3s ease, transform 0.2s ease-in-out; /* Smooth transitions for hover */
-}
-
-.side-menu a:hover {
-  background-color: #2A416F;
-  color: #fff;
-  transform: translateX(10px); /* Slide to the right on hover */
-
-}
-
-
-.side-menu a i {
-  margin-right: 10px;
-}
-
-.side-menu a.active {
-  background-color: #031F4E;
-  color: #fff;
-}
-
-.side-menu a.active i {
-  color: #fff;
-}
-
-.side-menu a:hover:not(.active) {
-  background-color: #2A416F;
-  color: #fff;
-}
-
-
-.logout {
-          color: #e74c3c; /* Log Out link color */
-          padding: 15px 20px; /* Padding for Log Out link */
-          margin-top: 215px; /* Add space above Log Out link */
-          display: flex; /* Ensure the icon and text align properly */
-          align-items: center; /* Center align the icon and text vertically */
-          transition: background 0.3s, color 0.3s; /* Transition effects */
-      }
-
-      .logout:hover {
-  background-color: #c0392b;
-  color: #fff;
-  transform: translateX(10px); /* Slide effect on hover for logout */
-}
+            /* Sidebar */
+            .side-menu {
+                display: flex;
+                flex-direction: column;
+                width: 260px;
+                height: 100vh;
+                background-color: #fff;
+                color: #031F4E;
+                position: fixed;
+                top: 0;
+                left: 0;
+                z-index: 1000;
+                overflow-y: hidden;
+                overflow-x: hidden;
+                padding: 2px;
+            }
+    
+            .side-menu .logo {
+                text-align: center;
+                padding: 20px;
+            }
+    
+            .side-menu .logo img {
+                max-width: 100%;
+                height: auto;
+            }
+    
+            .side-menu a {
+                display: flex;
+                align-items: center;
+                padding: 15px 20px;
+                color: #031F4E;
+                text-decoration: none;
+                transition: background 0.3s ease, color 0.3s ease, transform 0.2s ease-in-out;
+            }
+    
+            .side-menu a:hover {
+                background-color: #2A416F;
+                color: #fff;
+                transform: translateX(10px); /* Slide to the right on hover */
+            }
+    
+            .side-menu a i {
+                margin-right: 10px;
+            }
+    
+            .side-menu a.active {
+                background-color: #031F4E;
+                color: #fff;
+            }
+    
+            .side-menu a.active i {
+                color: #fff;
+            }
+    
+            .side-menu a:hover:not(.active) {
+                background-color: #2A416F;
+                color: #fff;
+            }
+    
+            .side-menu .logout {
+                padding: 15px 20px;
+                margin-top: 215px;
+                display: flex;
+                align-items: center;
+                transition: background 0.3s, color 0.3s;
+                transition: background 0.3s, color 0.3s;
+                margin-top: auto; /* Ensures logout stays at the bottom */
+            }
+    
+            .logout:hover {
+                background-color: #c0392b;
+                color: #fff;
+            }
 /* Set a fixed height for the dropdown and enable internal scrolling */
 .dropdown-content {
   display: none;
@@ -599,26 +651,218 @@ body {
   background-color: #c0392b; /* Hover effect for Log Out link */
   color: #fff; /* Change text color on hover */
 }
-.header-panel {
-    display: flex; /* Use flexbox for easy alignment */
-    justify-content: flex-end; /* Align items to the right */
-    align-items: center; /* Center vertically */
-    padding: 10px; /* Add some padding */
+
+  /* Header Panel */
+        .header-panel {
+            display: flex;
+            justify-content: space-between; /* Aligns title and icon on opposite sides */
+            align-items: center; /* Centers items vertically */
+            padding: 10px 40px; /* Adds padding for aesthetics */
+            background-color: #031F4E; /* Background color for the header */
+            color: #fff; /* Text color */
+            position: fixed; /* Fixes the header at the top */
+            top: 0; /* Aligns the header with the top of the viewport */
+            left: 260px; /* Aligns header with the main content */
+            width: calc(100% - 260px); /* Full width minus the sidebar */
+            height: 60px; /* Set a fixed height for the header */
+            z-index: 1001; /* Stays above the sidebar */
+        }
+
+        .user-icon {
+            width: 40px; /* Set a fixed width for the icon */
+            height: 40px; /* Set a fixed height for the icon */
+            border-radius: 50%; /* Makes the icon circular */
+            margin-left: 55%;
+            transition: transform 0.3s ease, box-shadow 0.3s ease; /* Smooth transition for the hover effect */
+        }
+
+        .user-icon:hover {
+            transform: scale(1.1); /* Slightly increase the size of the icon on hover */
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.2); /* Adds a shadow effect on hover */
+        }
+        
+        .delete-confirmation {
+    display: none; /* Hidden by default */
+    position: fixed; /* Stay in place */
+    z-index: 1000; /* Sit on top */
+    left: 50%; /* Center horizontally */
+    top: 60px; /* Position at the top */
+    transform: translateX(-50%); /* Adjust horizontal position to center */
+    width: 100%; /* Responsive width */
+    max-width: 450px; /* Max width for the modal */
+    background-color: #fff; /* White background */
+    padding: 15px; /* Padding around the content */
+    border-radius: 8px; /* Rounded corners */
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1); /* Subtle shadow */
+    text-align: center; /* Center the text */
+}
+button[type="submit"] {
+    background-color: #4CAF50; /* Green background */
+    color: white; /* White text */
+    padding: 10px 15px; /* Padding for the button */
+    border: none; /* Remove default border */
+    border-radius: 4px; /* Rounded corners */
+    cursor: pointer; /* Pointer cursor on hover */
+    transition: background-color 0.3s, transform 0.3s; /* Smooth transition */
+}
+
+button[type="submit"]:hover {
+    background-color:  #031F4E; /* Darker green on hover */
+    transform: scale(1.05); /* Slightly enlarge on hover */
+}
+
+button[type="submit"]:active {
+    transform: scale(0.95); /* Slightly shrink on click */
+}
+
+.close {
+    color: #aaa;
+    font-size: 24px;
+    float: right;
+    cursor: pointer;
+    margin-top:-5%;
+}
+
+.close:hover {
+    color: #000; /* Change color on hover */
+}
+
+
+button[type="submit"] {
+    background-color: #2A416F;; /* Green background for submit */
+    color: white; /* White text */
+}
+
+button[type="button"] {
+    background-color: transparent; /* No background color */
+    border: 2px solid #2A416F; /* Blue border */
+    color: #2A416F; /* Text color matching the border */
+    padding: 8px 12px; /* Padding for buttons */
+    border-radius: 4px; /* Rounded corners */
+    cursor: pointer; /* Pointer cursor on hover */
+    transition: background-color 0.3s, color 0.3s; /* Smooth transition */
+}
+button[type="button"]:hover {
+    background-color:  #031F4E; /* Darker green on hover */
+    transform: scale(1.05); /* Slightly enlarge on hover */
+}
+
+
+}
+
+button[type="submit"]:hover {
+    background-color: # #6A85BB;; /* Darker green on hover */
+}
+
+button[type="button"]:hover {
+    background-color: #d32f2f; /* Darker red on hover */
+    color:#ffff;
+}
+
+/* Style for the Logout Modal */
+.logout-modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent background */
+    overflow: hidden;
+    animation: fadeIn 0.3s ease-out; /* Animation for the background */
+}
+
+.logout-modal-content {
+    background-color: white;
+    margin: 5% auto; /* Consistent margin to position it higher */
+    padding: 20px;
+    border: 1px solid #888;
+    width: 30%;
+    max-width: 400px;
+    border-radius: 8px;
+    position: relative;
+    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+    text-align: center;
+    transition: all 0.3s ease;
+    animation: slideDown 0.3s ease-out; /* Animation for the modal content */
+}
+
+.logout-modal h2 {
+    margin-top: 0;
+    font-size: 1.5rem;
+    color: #031F4E; /* Match the theme color */
+}
+
+.logout-modal p {
+    font-size: 1rem;
+    color: #333;
+    margin: 10px 0 20px;
+}
+
+.logout-modal .modal-actions button {
+    padding: 10px 20px;
+    margin: 0 5px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: all 0.3s ease;
+}
+
+.logout-modal .modal-actions button:first-child {
     background-color: #031F4E;
+    color: #fff;
 }
 
-.profile-icon {
-    width: 40px; /* Set the width of the icon */
-    height: 40px; /* Set the height of the icon */
-    cursor: pointer; /* Change cursor to pointer on hover */
-    margin-left: 20px; /* Space between the icon and the edge */
+.logout-modal .modal-actions button:first-child:hover {
+    background-color: #2A416F;
 }
 
-.profile-icon:hover {
-    opacity: 0.8; /* Change opacity on hover for a slight effect */
+.logout-modal .modal-actions button:last-child {
+    background-color: #ddd;
+    color: #333;
+}
+
+.logout-modal .modal-actions button:last-child:hover {
+    background-color: #bbb;
+}
+
+.logout-modal .close-logout-modal {
+    position: absolute;
+    top: 10px;
+    right: 15px;
+    font-size: 18px;
+    cursor: pointer;
+    color: #333;
+    background-color: transparent;
+    border: none;
+}
+.logout-modal .close-logout-modal:hover {
+    color: #f44336;
 }
 
 
+/* Keyframe animations */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-20px); /* Start slightly above */
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0); /* Slide into place */
+    }
+}
 
 
 
@@ -627,11 +871,7 @@ body {
 </head>
 <body>
 
-<div class="header-panel">
-        <a href="admin_profile.php">
-            <img src="pics/icons8-test-account-100.png" alt="Profile Icon" class="profile-icon">
-        </a>
-    </div>
+
 
 
 
@@ -640,7 +880,7 @@ body {
     <div class="logo">
         <img src="pics/logo.png" alt="Logo">
     </div>
-    <a href="dashboard.html">
+    <a href="dashboard.php">
         <span class="material-icons" style="vertical-align: middle; font-size: 18px;">dashboard</span>
         <span style="margin-left: 8px;">Dashboard</span>
     </a>
@@ -662,8 +902,17 @@ body {
     <a href="archive.php"><i class="fas fa-archive"></i> Archive</a>
     
     <!-- Log Out Link -->
-    <a href="index.html" class="logout"><i class="fas fa-sign-out-alt"></i> Log Out</a>
+    <a href="#" class="logout" onclick="openLogoutModal()"><i class="fas fa-sign-out-alt"></i> Log Out</a>
 </div>
+
+<div class="header-panel">
+    <div class="header-title"></div>
+    <a href="admin_profile.php">
+        <img src="<?php echo htmlspecialchars($adminProfilePic); ?>" alt="User Icon" class="user-icon" onerror="this.src='uploads/9131529.png'">
+    </a>
+</div>
+
+
 
 <div class="main-content">
   <div class="panel" style="padding: 10px 20px;">
@@ -693,8 +942,9 @@ body {
 
     </div>
     <button class="add-vendor-button" onclick="location.href='vendorform.php'">
+        <span class="material-icons" style="margin-left: 2px;">add</span>
     Add Vendor
-    <span class="material-icons" style="margin-left: 2px;">add</span>
+    
 </button>
   
 </div>
@@ -713,75 +963,91 @@ body {
                 <th>Middle Name</th>
                 <th>Last Name</th>
                 <th>Suffix</th>
-                <th>Status</th>
                 <th>Contact #</th>
+                <th>Lot Area</th>
+                <th>Status</th>
                 <th>Action</th>
             </tr>
         </thead>
         <tbody>
-    <?php foreach ($cust as $customer) : ?>
-        <tr class="vendor-row">
-            <td>
-                <button class="expand-collapse-btn" onclick="toggleDetails(this)">
-                    <i class="fas fa-chevron-right"></i>
-                </button>
-            </td>
-            <td><b><?php echo $customer['vendorID']; ?></b></td>
-            <td><?php echo !empty($customer['fname']) ? $customer['fname'] : 'N/A'; ?></td>
-            <td><?php echo !empty($customer['mname']) ? $customer['mname'] : 'N/A'; ?></td>
-            <td><?php echo !empty($customer['lname']) ? $customer['lname'] : 'N/A'; ?></td>
-            <td><?php echo !empty($customer['suffix']) ? $customer['suffix'] : 'N/A'; ?></td>
-            <td><?php echo $customer['status']; ?></td> <!-- Display the status (Paid or Unpaid) -->
-            <td><?php echo !empty($customer['contactNo']) ? $customer['contactNo'] : 'N/A'; ?></td>
-            <td>
-                <button class="action-view" onclick="openQRModal('<?php echo $customer['vendorID']; ?>')">View QR</button>
-                <button class="action-edit" onclick="openEditModal('<?php echo $customer['vendorID']; ?>')">
-                    <i class="fa fa-edit"></i>
-                </button>
-                <form style="display: inline;" action="<?php echo $_SERVER['PHP_SELF']; ?>" method="post" onsubmit="return confirm('Are you sure you want to move Vendor ID <?php echo $customer['vendorID']; ?> - <?php echo $customer['fname']; ?> <?php echo $customer['lname']; ?> to the Archive Section?');">
-                    <input type="hidden" name="cust_id_to_delete" value="<?php echo $customer['vendorID']; ?>">
-                    <button type="submit" class="action-delete"><i class="fa fa-trash"></i></button>
-                </form>
-            </td>
-        </tr>
-        <!-- Hidden additional details row -->
-        <tr class="additional-info">
-            <td colspan="9">
-                <div class="info-title">
-                    <strong>Additional Details</strong>
-                </div>
-                <div class="info-row">
-                    <strong>Gender:</strong> <?php echo !empty($customer['gender']) ? $customer['gender'] : 'N/A'; ?>
-                </div>
-                <div class="info-row">
-                    <strong>Birthday:</strong> <?php echo !empty($customer['birthday']) ? $customer['birthday'] : 'N/A'; ?>
-                </div>
-                <div class="info-row">
-                    <strong>Age:</strong> <?php echo !empty($customer['age']) ? $customer['age'] : 'N/A'; ?>
-                </div>
-                <div class="info-row">
-                    <strong>Province:</strong> <?php echo !empty($customer['province']) ? $customer['province'] : 'N/A'; ?>
-                </div>
-                <div class="info-row">
-                    <strong>Municipality:</strong> <?php echo !empty($customer['municipality']) ? $customer['municipality'] : 'N/A'; ?>
-                </div>
-                <div class="info-row">
-                    <strong>Barangay:</strong> <?php echo !empty($customer['barangay']) ? $customer['barangay'] : 'N/A'; ?>
-                </div>
-                <div class="info-row">
-                    <strong>House #:</strong> <?php echo !empty($customer['houseNo']) ? $customer['houseNo'] : 'N/A'; ?>
-                </div>
-                <div class="info-row">
-                    <strong>Street Name:</strong> <?php echo !empty($customer['streetname']) ? $customer['streetname'] : 'N/A'; ?>
-                </div>
-            </td>
-        </tr>
-    <?php endforeach; ?>
+   <?php foreach ($cust as $customer) : ?>
+    <tr class="vendor-row">
+        <td>
+            <button class="expand-collapse-btn" onclick="toggleDetails(this)">
+                <i class="fas fa-chevron-right"></i>
+            </button>
+        </td>
+        <td><b><?php echo $customer['vendorID']; ?></b></td>
+        <td><?php echo !empty($customer['fname']) ? $customer['fname'] : 'N/A'; ?></td>
+        <td><?php echo !empty($customer['mname']) ? $customer['mname'] : 'N/A'; ?></td>
+        <td><?php echo !empty($customer['lname']) ? $customer['lname'] : 'N/A'; ?></td>
+        <td><?php echo !empty($customer['suffix']) ? $customer['suffix'] : 'N/A'; ?></td>
+        <td><?php echo !empty($customer['contactNo']) ? $customer['contactNo'] : 'N/A'; ?></td>
+        <td><?php echo !empty($customer['lotArea']) ? $customer['lotArea'] : 'N/A'; ?></td>
+        <td><?php echo $customer['status']; ?></td>
+        <td>
+            <button class="action-view" onclick="openQRModal('<?php echo $customer['vendorID']; ?>')">View QR</button>
+            <button class="action-edit" onclick="openEditModal('<?php echo $customer['vendorID']; ?>')">
+                <i class="fa fa-edit"></i>
+            </button>
+            <button class="action-delete" onclick="openDeleteConfirmation('<?php echo $customer['vendorID']; ?>', '<?php echo $customer['fname']; ?>', '<?php echo $customer['lname']; ?>')">
+                <i class="fa fa-trash"></i>
+            </button>
+        </td>
+    </tr>
+    <!-- Hidden additional details row -->
+    <tr class="additional-info">
+        <td colspan="9">
+            <div class="info-title">
+                <strong>Additional Details</strong>
+            </div>
+            <div class="info-row">
+                <strong>Gender:</strong> <?php echo !empty($customer['gender']) ? $customer['gender'] : 'N/A'; ?>
+            </div>
+            <div class="info-row">
+                <strong>Birthday:</strong> <?php echo !empty($customer['birthday']) ? $customer['birthday'] : 'N/A'; ?>
+            </div>
+            <div class="info-row">
+                <strong>Age:</strong> <?php echo !empty($customer['age']) ? $customer['age'] : 'N/A'; ?>
+            </div>
+            <div class="info-row">
+                <strong>Province:</strong> <?php echo !empty($customer['province']) ? $customer['province'] : 'N/A'; ?>
+            </div>
+            <div class="info-row">
+                <strong>Municipality:</strong> <?php echo !empty($customer['municipality']) ? $customer['municipality'] : 'N/A'; ?>
+            </div>
+            <div class="info-row">
+                <strong>Barangay:</strong> <?php echo !empty($customer['barangay']) ? $customer['barangay'] : 'N/A'; ?>
+            </div>
+            <div class="info-row">
+                <strong>House #:</strong> <?php echo !empty($customer['houseNo']) ? $customer['houseNo'] : 'N/A'; ?>
+            </div>
+            <div class="info-row">
+                <strong>Street Name:</strong> <?php echo !empty($customer['streetname']) ? $customer['streetname'] : 'N/A'; ?>
+            </div>
+        </td>
+    </tr>
+<?php endforeach; ?>
+
+<!-- Delete Confirmation -->
+<div id="deleteConfirmation" class="delete-confirmation">
+    <div class="delete-confirmation-content">
+        <span class="close" onclick="closeDeleteConfirmation()">&times;</span>
+     <p>Are you sure you want to move Vendor ID <strong><span id="modalVendorId"></span></strong> - <strong><span id="modalVendorName"></span></strong> to the Archive Section?</p>
+
+        <form id="deleteForm" action="<?php echo $_SERVER['PHP_SELF']; ?>" method="post">
+            <input type="hidden" name="cust_id_to_delete" id="cust_id_to_delete">
+            <button type="submit">Confirm</button>
+            <button type="button" onclick="closeDeleteConfirmation()">Cancel</button>
+        </form>
+    </div>
+</div>
+
 </tbody>
 
         <tfoot>
             <tr>
-                <td colspan="9">
+                <td colspan="10">
                 <hr>
                     <div class="pagination">
                         <?php if ($totalPages > 1 || $totalRows > 0): ?>
@@ -815,86 +1081,103 @@ body {
   <!-- Edit Modal -->
   <div id="editModal" class="modal">
     <div class="modal-content" style="overflow: auto;">
-    <span class="close-modal" onclick="closeEditModal()">&times;</span>
-        <!-- Hidden Logo Image -->
-        <img id="malolosLogo" src="pics/malolos-logo.png" style="display: none;">
-        <img id="hiddenLogo" src="pics/logo-bt.png" style="display: none;">
-
+        <span class="close-modal" onclick="closeEditModal()">&times;</span>
         <h2 style="text-align: center;">Vendor Basic Information</h2>
 
         <form action="<?php echo $_SERVER['PHP_SELF']; ?>" method="post">
             <input type="hidden" name="vendor_id_to_edit" id="edit_vendor_id" value="">
+
             <label for="edit_fName">First Name:</label>
             <input type="text" id="edit_fName" name="edit_fName" required><br>
+
             <label for="edit_mname">Middle Name:</label>
-            <input type="text" id="edit_mname" name="edit_mname" required><br>
-            <label for="edit_lname">Last Name:</label>
+            <input type="text" id="edit_mname" name="edit_mname"><br>
+
+            <label for="edit_lName">Last Name:</label>
             <input type="text" id="edit_lName" name="edit_lName" required><br>
 
-            <label for="edit_suffix">Suffix:</label>
-            <select id="edit_suffix" name="edit_suffix">
-                  <option value="">Select Suffix</option>
-                  <option value="Jr.">Jr.</option>
-                  <option value="V">Sr.</option>
-                  <option value="II">II</option>
-                  <option value="II">III</option>
-                  <option value="II">IV</option>
-                  <option value="II">V</option>
-              </select><br><br>
 
-          <label for="edit_gender">Gender:</label>
-<select id="edit_gender" name="edit_gender" required>
-    <option value="Male">Male</option>
-    <option value="Female">Female</option>
+
+<label for="edit_suffix">Suffix:</label>
+<select id="edit_suffix" name="edit_suffix">
+  <option value="">Select Suffix</option>
+  <option value="Jr.">Jr.</option>
+  <option value="Sr.">Sr.</option>
+  <option value="II">II</option>
+  <option value="III">III</option>
+  <option value="IV">IV</option>
+  <option value="V">V</option>
 </select>
-<br><br>
+
+         <br>
+            
+                        
+            <label for="edit_gender">Gender:</label>
+            <select id="edit_gender" name="edit_gender">
+              <option value="">Select Gender</option>
+              <option value="male">Male</option>
+              <option value="female">Female</option>
+            </select>
+
+         <br>
 
             <label for="edit_birthday">Birthday:</label>
             <input type="date" id="edit_birthday" name="edit_birthday" onchange="calculateAge()" required><br>
 
             <label for="edit_age">Age:</label>
             <input type="text" id="edit_age" name="edit_age" readonly><br>
-              
+
             <label for="edit_contactNo">Contact Number:</label>
-<div style="position: relative;">
-    <img src="philippineflag.webp" alt="PH" width="20" height="auto" style="position: absolute; left: 5px; top: 8px;">
-    <span style="position: absolute; left: 30px; top: 8px; color: #333;font-size: 14px;">+63</span>
-    <input type="text" id="edit_contactNo" name="edit_contactNo" pattern="[0-9]{10}" maxlength="10" style="padding-left: 60px; width: 200px;" placeholder="XXXXXXXXXX" required>
-</div>
+            <div style="position: relative;">
+                <img src="philippineflag.webp" alt="PH" width="20" height="auto" style="position: absolute; left: 5px; top: 8px;">
+                <span style="position: absolute; left: 30px; top: 8px; color: #333;font-size: 14px;">+63</span>
+                <input type="text" id="edit_contactNo" name="edit_contactNo" pattern="[0-9]{10}" maxlength="10" style="padding-left: 60px; width: 200px;" placeholder="XXXXXXXXXX" required>
+            </div><br>
 
-<div class="form-container">
-  <label for="edit_province">Province:</label>
-  <select id="edit_province" name="edit_province" required onchange="updateCityMunicipality()">
-    <option value="">Select Province</option>
-    <option value="Aurora">Aurora</option>
-    <option value="Bataan">Bataan</option>
-    <option value="Bulacan">Bulacan</option>
-    <option value="Nueva Ecija">Nueva Ecija</option>
-    <option value="Pampanga">Pampanga</option>
-    <option value="Tarlac">Tarlac</option>
-    <option value="Zambales">Zambales</option>
-  </select><br>
+            <label for="edit_lotArea">Lot Area:</label>
+            <select id="edit_lotArea" name="edit_lotArea" required>
+                <option value="">Select Area Size</option>
+                <option value="1 sq. m">1 sq. m</option>
+                <option value="2 sq. m">2 sq. m</option>
+                <option value="3 sq. m">3 sq. m</option>
+                <option value="4 sq. m">4 sq. m</option>
+                <option value="5 sq. m">5 sq. m</option>
+                <option value="custom">Custom...</option>
+            </select><br>
 
-  <label for="edit_municipality">Municipality:</label>
-  <select id="edit_municipality" name="edit_municipality" required onchange="updateBarangay()">
-    <option value="">Select Municipality</option>
-  </select><br>
-
-  <label for="edit_barangay">Barangay:</label>
-  <select id="edit_barangay" name="edit_barangay" required>
-    <option value="">Select Barangay</option>
-  </select><br>
-</div>
 
             <label for="edit_houseNo">House Number:</label>
             <input type="text" id="edit_houseNo" name="edit_houseNo" required><br>
+
             <label for="edit_streetname">Street Name:</label>
             <input type="text" id="edit_streetname" name="edit_streetname" required><br>
-            
+
+     <label for="edit_province">Province:</label>
+        <select id="edit_province" name="edit_province">
+            <option value="">Select New Province</option>
+        </select>
+        <input type="hidden" id="provinceText" name="provinceText">
+        
+            <label for="edit_municipality">City/Municipality:</label>
+    <select id="edit_municipality" name="edit_municipality">
+        <option value="">Select New City/Municipality</option>
+    </select>
+    <input type="hidden" id="cityText" name="cityText">
+
+        
+    <label for="edit_barangay">Barangay:</label>
+    <select id="edit_barangay" name="edit_barangay">
+        <option value="">Select New Barangay</option>
+    </select>
+    <input type="hidden" id="barangayText" name="barangayText">
+
+
+
             <input type="submit" name="submit_edit" value="Save Changes">
         </form>
     </div>
 </div>
+
 
 <div id="qrModal" class="modal">
     <div class="modal-content" id="qrModalContent">
@@ -902,8 +1185,22 @@ body {
         <!-- QR code content will be dynamically generated here -->
     </div>
 </div>
+    <!-- Logout Modal -->
+<div id="logoutModal" class="logout-modal">
+    <div class="logout-modal-content">
+        <span class="close-logout-modal" onclick="closeLogoutModal()">&times;</span>
+        <h2>Confirm Logout</h2>
+        <p>Are you sure you want to log out?</p>
+        <div class="modal-actions">
+            <button onclick="confirmLogout()">Yes, Log Out</button>
+            <button onclick="closeLogoutModal()">Cancel</button>
+        </div>
+    </div>
+</div>
 
   <script>
+  
+  
 // JavaScript for click animation
 const menuLinks = document.querySelectorAll('.side-menu a');
 
@@ -967,7 +1264,106 @@ function toggleDetails(button) {
 }
 
 
+function openDeleteConfirmation(vendorId, firstName, lastName) {
+    document.getElementById('modalVendorId').textContent = vendorId;
+    document.getElementById('modalVendorName').textContent = firstName + ' ' + lastName;
+    document.getElementById('cust_id_to_delete').value = vendorId;
+    document.getElementById('deleteConfirmation').style.display = "block";
+}
 
+function closeDeleteConfirmation() {
+    document.getElementById('deleteConfirmation').style.display = "none";
+}
+
+// Close confirmation when clicking outside of it
+window.onclick = function(event) {
+    const modal = document.getElementById('deleteConfirmation');
+    if (event.target == modal) {
+        closeDeleteConfirmation();
+    }
+}
+// Load CSV data and parse it for provinces, municipalities, and barangays
+async function loadAddressData() {
+    const response = await fetch('Philippine_Address_Data.csv');
+    const data = await response.text();
+
+    // Parse CSV data into an array of objects and handle empty rows
+    const rows = data.split('\n').slice(1).filter(row => row.trim() !== '');
+    const addresses = rows.map(row => {
+        const [level, name, code] = row.split(',').map(item => item ? item.trim() : ''); // Ensure no undefined properties
+        return { level, name, code };
+    });
+
+    return addresses;
+}
+
+// Sort addresses alphabetically by name
+function sortAddresses(addresses) {
+    return addresses.sort((a, b) => a.name.localeCompare(b.name));
+}
+
+// Populate the Province dropdown
+async function populateProvinces() {
+    const addresses = await loadAddressData();
+    const provinces = sortAddresses(addresses.filter(address => address.level === 'Prov'));
+    const provinceDropdown = document.getElementById('edit_province');
+
+    provinces.forEach(province => {
+        let option = document.createElement('option');
+        option.value = province.code;
+        option.textContent = province.name;
+        provinceDropdown.appendChild(option);
+    });
+}
+
+// Event listener for Province selection
+document.addEventListener('DOMContentLoaded', function () {
+    populateProvinces();
+
+    document.getElementById('edit_province').addEventListener('change', async function () {
+        const provinceCode = this.value;
+        const addresses = await loadAddressData();
+
+        // Include both 'Mun' and 'City' levels in the municipalities dropdown
+        const municipalitiesAndCities = sortAddresses(addresses.filter(
+            address => (address.level === 'Mun' || address.level === 'City') && address.code.startsWith(provinceCode.slice(0, 4))
+        ));
+
+        const cityDropdown = document.getElementById('edit_municipality');
+        cityDropdown.innerHTML = '<option value="">Select Municipality</option>';
+
+        municipalitiesAndCities.forEach(cityOrMunicipality => {
+            let option = document.createElement('option');
+            option.value = cityOrMunicipality.code;
+            option.textContent = cityOrMunicipality.name;
+            cityDropdown.appendChild(option);
+        });
+
+        // Clear barangay dropdown when province changes
+        document.getElementById('edit_barangay').innerHTML = '<option value="">Select Barangay</option>';
+    });
+
+    // Event listener for City/Municipality selection
+    document.getElementById('edit_municipality').addEventListener('change', async function () {
+        const municipalityCode = this.value;
+        const addresses = await loadAddressData();
+
+        // Filter barangays based on selected city/municipality code
+        const barangays = sortAddresses(addresses.filter(
+            address => address.level === 'Bgy' && address.code.startsWith(municipalityCode.slice(0, 6))
+        ));
+
+        const barangayDropdown = document.getElementById('edit_barangay');
+        barangayDropdown.innerHTML = '<option value="">Select Barangay</option>';
+
+        barangays.forEach(barangay => {
+            let option = document.createElement('option');
+            option.value = barangay.code;
+            option.textContent = barangay.name;
+            barangayDropdown.appendChild(option);
+        });
+    });
+});
 
     // for birthday auto calculate
 
@@ -984,169 +1380,6 @@ function toggleDetails(button) {
     document.getElementById('edit_age').value = age;
 }
 
-
-
-const barangayData = {
-    //Municipality of bulacan and barangays
-    "Angat": ["Banaban", "Baybay", "Binagbag", "Donacion", "Encanto", "Laog", "Marungko", "Mercado", "Niugan", "Paltok", "Pulong Yantok", "San Roque", "Santa Cruz", "Sapang Pari", "Taboc", "Binagbag"],
-    "Balagtas": ["Borol 1st", "Borol 2nd", "Dalig", "Longos", "Panginay", "Pulong Gubat", "San Juan", "Santol", "Wawa"],
-    "Angeles": ["Agapito Del Rosario", "Anunas", "Balibago", "Capaya", "Claro M. Recto", "Cuayan", "Cutcut", "Cutud", "Lourdes Northwest", "Lourdes Sur", "Lourdes Sur East", "Malabanias", "Margot", "Marisol", "Mining", "Pampang", "Pandan", "Pulung Maragul", "Pulung Cacutud", "Pulung Bulu", "Salapungan", "San Jose", "San Nicolas", "Santa Teresita", "Santa Trinidad", "Santo Domingo", "Santo Rosario", "Sapalibutad", "Sapangbato", "Tabun", "Virgen Delos Remedios"],
-    "Balagtas": ["Borol 1st", "Borol 2nd", "Dalig", "Longos", "Panginay", "Pulong Gubat", "San Juan", "Santol", "Wawa"],
-    "Baliuag": ["Bagong Nayon", "Barangca", "Batia", "Calantipay", "Catulinan", "Concepcion", "Makinabang", "Matangtubig", "Paitan", "Poblacion", "Sabang", "San Jose", "San Roque", "Santa Barbara", "Santa Cruz", "Tangos", "Tiaong", "Tilapayong", "Virgen Delas Flores"],
-    "Bocaue": ["Antipona", "Bagumbayan", "Bambang", "Batia", "Biñang 1st", "Biñang 2nd", "Bolacan", "Bundukan", "Bunlo", "Caingin", "Duhat", "Igulot", "Lolomboy", "Poblacion", "Sulucan", "Taal", "Tambubong", "Turo", "Wakas"],
-    "Bulakan": ["Bagumbayan", "Balubad", "Bambang", "Matungao", "Maysantol", "Pitpitan", "Perez", "San Francisco", "San Jose", "San Nicolas", "Santa Ana", "Sapang", "Taliptip", "Tibig"],
-    "Bustos": ["Bonga Mayor", "Bonga Menor", "Camachile", "Cambaog", "Catacte", "Malamig", "Mina", "Pagala", "Poblacion", "San Pedro", "Santor", "Talampas"],
-    "Calumpit": ["Balungao", "Buguion", "Calizon", "Calumpang", "Corazon", "Frances", "Gatbuca", "Gugo", "Iba Este", "Iba Oeste", "Longos", "Lumbreras", "Mabolo", "Maysantol", "Palimbang", "Panginay", "Pio Cruzcosa", "Poblacion", "Pulo", "San Jose", "San Juan", "San Marcos", "Santa Catalina", "Santa Lucia", "Santo Cristo", "Sapang Bayan", "Sapang Putol","Sergio Bayan","Sucol", "Tabon"],
-    "Doña Remedios Trinidad": ["Bagong Barrio", "Bakal I", "Bakal II", "Bayabas", "Camachin", "Camachile", "Kalawakan", "Kabayunan", "Pulong Sampalok", "Sapang Bulak"],
-    "Guiguinto": ["Cutcut", "Daungan", "Ilang-ilang", "Malis", "Panginay", "Poblacion", "Pritil", "Pulong Gubat", "Santa Cruz", "Santa Rita","Tabang","Tabe","Tiaong","Tuktukan"],
-    "Hagonoy": ["Abulalas", "Carillo", "Iba", "Iba-Iba", "Palapat", "Pugad", "San Agustin", "San Isidro", "San Jose", "San Juan", "San Miguel", "San Nicolas", "San Pablo", "San Pascual", "San Pedro", "San Roque", "Santa Elena", "Santa Monica", "Santo Niño", "Santo Rosario", "Tampok"],
-    "Malolos": ["Anilao", "Atlag", "Babatnin", "Bagna", "Bagong Bayan", "Balayong", "Balite", "Bangkal", "Barihan", "Bungahan", "Caingin", "Calero", "Caliligawan", "Canalate", "Caniogan", "Catmon", "Cofradia", "Dakila", "Guinhawa", "Liang", "Ligas", "Longos", "Look 1st", "Look 2nd", "Lugam", "Mabolo", "Mambog", "Masile", "Matimbo", "Mojon", "Namayan", "Niugan", "Pamarawan", "Panasahan", "Pinagbakahan", "San Agustin", "San Gabriel", "San Juan", "San Pablo", "San Vicente", "Santiago", "Santisima Trinidad", "Santo Cristo", "Santo Niño", "Santo Rosario", "Santor", "Sumapang Bata", "Sumapang Matanda", "Taal", "Tikay"],
-    "Marilao": ["Abangan Norte", "Abangan Sur", "Ibayo", "Lambakin", "Lias", "Loma de Gato", "Nagbalon", "Patubig", "Poblacion I", "Poblacion II", "Prenza I", "Prenza II", "Santa Rosa I", "Santa Rosa II", "Saog", "Tabing Ilog"],
-    "Meycauayan": ["Bahay Pare", "Bancal", "Banga", "Batong Malake", "Bayugo", "Caingin", "Calvario", "Camalig", "Hulo", "Iba", "Langka", "Lawa", "Libtong", "Liputan", "Longos", "Malhacan", "Pajo", "Pandayan", "Pantoc", "Perez", "Poblacion", "Saint Francis", "Saluysoy", "Tugatog", "Ubihan", "Zamora"],  
-    "Norzagaray": ["Bangkal", "Baraka", "Bigte", "Bitungol", "Friendship Village Resources", "Matictic", "Minuyan", "Partida", "Pinagtulayan", "Poblacion", "San Lorenzo", "San Mateo", "Santa Maria", "Tigbe"],
-    "Obando": ["Binuangan", "Hulo", "Lawa", "Mabolo", "Pag-asa", "Paliwas", "Panghulo", "San Pascual", "Tawiran", "Ubihan", "Paco", "Salambao"],
-    "Pandi": ["Bagong Barrio", "Bagong Pag-asa", "Baka-bakahan", "Bunsuran 1st", "Bunsuran 2nd", "Bunsuran 3rd", "Cacarong Bata", "Cacarong Matanda", "Cupang", "Malibong Bata", "Manatal", "Mapulang Lupa", "Masuso", "Masuso East", "Poblacion", "Real de Cacarong", "Santo Niño", "San Roque", "Siling Bata", "Siling Matanda"],
-    "Paombong": ["Akle", "Bagong Barrio", "Balagtas", "Binakod", "Kapiti", "Malumot", "Pinalagdan", "Poblacion", "San Isidro I", "San Isidro II", "San Jose", "San Roque", "San Vicente", "Santa Cruz", "Santa Lucia", "Sapang Dalaga"],
-    "Plaridel": ["Agnaya", "Bagong Silang", "Banga 1st", "Banga 2nd", "Bintog", "Bulihan", "Caniogan", "Dampol", "Lumang Bayan", "Parulan", "Poblacion", "Pulong Bayabas", "San Jose", "Santa Ines", "Santo Cristo", "Santo Niño", "Sapang Putol"],
-    "Pulilan": ["Balatong A", "Balatong B", "Cutcot", "Dampol 1st", "Dampol 2nd", "Dulong Malabon", "Inaon", "Longos", "Lumbac", "Paltao", "Penabatan", "Poblacion", "Santa Peregrina", "San Francisco", "Tibag", "Tabon", "Tibag"],
-    "San Ildefonso": ["Akling", "Alagao", "Anyatam", "Bagong Barrio", "Bagong Pag-asa", "Basuit", "Bubulong Malaki", "Calasag", "Calawitan", "Casalat", "Lapnit", "Malipampang", "Masile", "Matimbubong", "Paltao", "Pinaod", "Poblacion", "Pulong Tamo", "San Juan", "Sapang Dayap", "Sumandig", "Telepatio", "Upig", "Ulingao"],
-    "San Miguel": ["Bagong Silang", "Balaong", "Bardias", "Baritan", "Biazon", "Bicas", "Buga", "Buliran", "Calumpang", "Cambita", "Camias", "Damas", "Ilog Bulo", "Kabaritan", "King Kabayo", "Lico", "Lomboy", "Magmarale", "Maligaya", "Mandile", "Manggahan", "Matimbubong", "Pacalag", "Paliwasan", "Poblacion", "Pulong Duhat", "Sacdalan", "Salangan", "San Agustin", "San Jose", "San Juan", "San Roque", "San Vicente", "Santa Lucia", "Santa Rita Bata", "Santa Rita Matanda", "Santo Cristo", "Sapang", "Sapang Dayap", "Sapang Putik", "Tandiyong Bakal", "Tibagan", "Tucdoc", "Tumana", "Tungkong Mangga", "Tungkong Munti", "Tungkong Silangan", "Tungkong Upper"],
-    "San Rafael": ["Banca-Banca", "Caingin", "Coral na Bato", "Cruz na Daan", "Dagat-Dagatan", "Diliman I", "Diliman II", "Libis", "Lico", "Maasim", "Mabalas-Balas", "Mabini", "Malapad na Parang", "Maronguillo", "Pacalag", "Pagala", "Pantubig", "Pasong Bangkal", "Poblacion", "Pulong Bayabas", "Salapungan", "San Agustin", "San Roque", "Sapang Putik", "Talacsan", "Tambubong", "Tungkong Mangga", "Ulingao"],
-    "Santa Maria": ["Bagbaguin", "Balasing", "Buenavista", "Bulac", "Camangyanan", "Catmon", "Cay Pombo", "Caysio", "Dulong Bayan", "Guyong", "Lalakhan", "Mag-asawang Sapa", "Mahabang Parang", "Manggahan", "Parada", "Poblacion", "Pulong Buhangin", "San Gabriel", "San Jose Patag", "San Vicente", "Santa Clara", "Santa Cruz", "Silangan", "Tabing Bakod", "Tumana"],   
-    "San Jose del Monte": ["Bagong Buhay I", "Bagong Buhay II", "Bagong Buhay III", "Ciudad Real", "Dulong Bayan", "Fatima I", "Fatima II", "Fatima III", "Fatima IV", "Fatima V", "Francisco Homes-Guijo", "Francisco Homes-Mulawin", "Francisco Homes-Narra", "Francisco Homes-Yakal", "Gaya-Gaya", "Graceville", "Kaybanban", "Kaypian", "Lawang Pare", "Minuyan I", "Minuyan II", "Minuyan III", "Minuyan IV", "Minuyan Proper", "Poblacion", "Poblacion I", "Poblacion II", "Poblacion III", "San Isidro", "San Manuel", "San Martin I", "San Martin II", "San Martin III", "San Martin IV", "San Martin V", "San Pedro", "Santa Cruz", "Sapang Palay Proper", "Santo Cristo", "Tungkong Mangga"],
-
-    //Municipality of aurora and barangays
-    "Baler": ["Barangay I (Poblacion)", "Barangay II (Poblacion)", "Barangay III (Poblacion)", "Barangay IV (Poblacion)", "Buhangin", "Calabuanan", "Obligacion", "Pingit", "Reserva", "Sabang", "Suklayin", "Zabali"],
-    "Casiguran": ["Barangay 1 (Poblacion)", "Barangay 2 (Poblacion)", "Barangay 3 (Poblacion)", "Barangay 4 (Poblacion)", "Barangay 5 (Poblacion)", "Barangay 6 (Poblacion)", "Barangay 7 (Poblacion)", "Barangay 8 (Poblacion)", "Calangcuasan", "Cozo", "Culat", "Dibacong", "Esperanza", "Lual", "San Ildefonso", "Tabas"],
-    "Dilasag": ["Barangay 1 (Poblacion)", "Barangay 2 (Poblacion)", "Barangay 3 (Poblacion)", "Barangay 4 (Poblacion)", "Diniog", "Dicabasan", "Dilaguidi", "Esperanza", "Lawang", "Masagana"],
-    "Dinalungan": ["Abuleg", "Barangay I (Poblacion)", "Barangay II (Poblacion)", "Barangay III (Poblacion)", "Dibaraybay", "Dimabuno", "Lipit", "Mapalad"],
-    "Dingalan": ["Aplaya", "Butas na Bato", "Caragsacan", "Davildavilan", "Ibona", "Lagsing", "Maligaya", "Matawe", "Paltic", "Poblacion", "Tanawan", "Umiray", "White Beach"],
-    "Dipaculao": ["Bacong", "Barangay I (Poblacion)", "Barangay II (Poblacion)", "Barangay III (Poblacion)", "Bani", "Borlongan", "Buenavista", "Calaocan", "Dibutunan", "Dinadiawan", "Diteki", "Gupa", "Lobbot", "Maligaya", "Mucdol"],
-    "Maria Aurora": ["Alcala", "Bagtu", "Bayanihan", "Bazal", "Dialatnan", "Diaat", "Dibut", "Diarabasin", "Dimanayat", "Ditumabo", "Kadayacan", "Malasin", "Suguit", "Villa Aurora", "Barangay I (Poblacion)", "Barangay II (Poblacion)", "Barangay III (Poblacion)", "Quirino"],
-    "San Luis": ["Bacong", "Balete", "Dibalo", "Dibut", "Dimanayat", "Ditumabo", "L. Pimentel", "Nonong Senior", "Real", "San Isidro", "San Jose", "San Juan", "Zarah"],
-
-    //Municipality of bataan and barangays
-  "Abucay": ["Bangkal", "Calaylayan", "Capitangan", "Gabon", "Laon", "Mabatang", "Omboy", "Panibatuhan", "Salamague", "Wawa"],
-  "Bagac": ["Atilano L. Ricardo", "Bagumbayan", "Binuangan", "Ibaba", "Ibis", "Parang", "Paysawan", "Quinawan", "Pag-Asa", "Banawang", "Binukawan"],
-  "Balanga City": ["Bagong Silang", "Bagumbayan", "Cataning", "Cupang Proper", "Cupang West", "Dangcol", "Ibayo", "Malabia", "Poblacion", "San Jose", "San Juan", "Sibacan", "Talisay", "Tenejero", "Tortugas"],
-  "Dinalupihan": ["Alis", "Colo", "Daang Bago", "Del Rosario", "Gen. Luna", "Happy Valley", "Katipunan", "Layac", "Luacan", "Mabini", "Magsaysay", "Maligaya", "Naparing", "New San Jose", "Old San Jose", "Padre Dandan", "Pag-Asa", "Pagalanggang", "Poblacion", "Roxas", "Saguing", "San Benito", "San Isidro", "San Pablo", "San Ramon", "Santa Isabel"],
-  "Hermosa": ["A. Rivera", "Almacen", "Bacong", "Balsic", "Burgos", "Cataning", "Del Pilar", "Lamao", "Mabiga", "Mabuco", "Mandama", "Maite", "Palihan", "Pulo", "Saba", "Sawang", "Sumalo"],
-  "Limay": ["Alangan", "Duale", "Kitang 1 and 2", "Lamao", "Landing", "Poblacion", "Reformista", "Saint Francis II", "San Francisco de Asis", "San Isidro", "Tuyo", "Wawa", "Kitang I"],
-  "Mariveles": ["Alas-asin", "Balon-Anito", "Batangas II", "Baseco", "Camaya", "Iting", "Lamao", "Lucanin", "Malaya", "Maligaya", "Poblacion", "San Carlos", "San Isidro", "Santo Rosario", "Sisiman", "Townsite", "Wawa"],
-  "Morong": ["Binaritan", "Mabayo","Nagbalayong","Sabang", "Poblacion"],
-  "Orani": ["Apollo", "Bagong Paraiso", "Balut", "Bayan", "Calero", "Centro", "Doña", "Kapinpin", "Kolinlang", "Mulawin", "Pansacala", "Pociano", "Pantalan Luma", "Paraiso", "Santo Domingo", "Santo Rosario", "Wawa"],
-  "Orion": ["Arellano", "Bagumbayan", "Balagtas", "Balut", "Bantan", "Calungusan", "Daan Bilolo", "Daang Parola", "Kapunitan", "Lati", "Lucanin", "Pandatung", "Puting Buhangin", "Sabatan", "San Vicente"],
-  "Pilar": ["Bagumbayan", "Balut", "Barangay Pantingan", "Liyang", "Nagwaling", "Panilao", "Pita", "Saint Francis I", "Santa Rosa", "Wakas"],
-
-
-   //Municipality of nueva ecija and barangays
-    "Aliaga": ["Aliaga", "Baguio", "Banga", "Barangka", "Bitas", "Bongabong", "Bulan-bulan", "Calabuan", "Dela Paz", "Gapan", "Inbit", "Lubo", "Mabini", "Malinao", "Mambog", "Mandalag", "Mauway", "Minuli", "Nagcatumbalen", "San Vicente", "Santo Domingo"],
-    "Bongabon": ["Bagong Sikat", "Basilang", "Bitulok", "Cuyapo", "Lumbang", "Malimba", "Malanday", "Manganay", "Mangalang", "Magsaysay", "Mabini", "Poblacion", "San Vicente", "Santa Maria", "Tagpos"],
-    "Cabiao": ["Bañadero", "Biclat", "Bulaon", "Cabitang", "Dila-dila", "Longos", "Malabanan", "Maligaya", "Poblacion", "San Jose", "San Juan", "San Roque", "San Vicente"],
-    "Cabanatuan": ["Bagong Sikat", "Banggain", "Buan", "Caalibangbangan", "Capas", "Canawan", "Carmen", "H. del Pilar", "Hulo", "Imelda", "Laurel", "Poblacion", "San Jose", "San Miguel", "San Pablo", "San Roque", "Santa Rita", "Santiago", "Taal", "Tungkong Mangga"],
-    "Carranglan": ["Atut, Bataan", "Carmen", "Del Pilar", "Dingalan", "Labrador", "Lemon", "Magsaysay", "Maranon", "Poblacion", "San Felipe", "San Jose", "San Vicente", "Tala", "Urbiztondo"],
-    "Cuyapo": ["Bagumbayan", "Bangal", "Bocaue", "Cuyapo", "Dawis", "Dolores", "Hidalgo", "Layog", "Magaspac", "Maligaya", "Mangat", "Mangga", "Mansaraysayan", "San Antonio", "San Felipe", "San Isidro", "San Juan", "San Vicente", "Santa Rosa", "Tondo"],
-    "Gapan": ["Alvarez", "Bangued", "Bata", "Bocobo", "Bongabon", "Bunbungan", "Concepcion", "Duhat", "Hulog", "Jaen", "Mabini", "Poblacion", "San Isidro", "San Vicente", "San Jose", "Santo Domingo", "Santa Lucia"],
-    "Gabaldon": ["Bayanan", "Bungahan", "Bunga", "Dela Paz", "La Torre", "Magsaysay", "Mangalang", "Maluya", "Mayantoc", "Poblacion", "San Isidro", "San Vicente", "Santa Maria"],
-    "General Mamerto Natividad": ["A. Mendoza", "Bagong Sikat", "Bayanan", "Caguioa", "Camuin", "Dila-dila", "Doña Aurora", "Habul", "Labrador", "Maimpis", "Mawaca", "Poblacion", "San Felipe", "San Isidro"],
-    "General Tinio": ["Alua", "Cangca", "Guimba", "Maguin", "Malabnang", "Manggahan", "Natividad", "Poblacion", "San Jose", "San Vicente"],
-    "Guimba": ["Bagong Sikat", "Barangal", "Buliran", "Cayanga", "Gapan", "Magsaysay", "Malawig", "Mawaca", "Poblacion", "San Felipe", "San Isidro"],
-    "Jaen": ["Bagong Sikat", "Baliwag", "Bungahan", "Bunbungan", "Cabaruan", "Cacutud", "Carmen", "Hulo", "Magsaysay", "Maligaya", "Poblacion", "San Antonio", "San Isidro", "San Vicente"],
-    "Laur": ["Bagong Silang", "Bamban", "Bunbungan", "Labrador", "Magsaysay", "Malabnang", "Mansaraysayan", "Natividad", "Poblacion", "San Jose", "San Vicente"],
-    "Licab": ["Bansalangin", "Cangcawayan", "Malimango", "Poblacion", "San Isidro", "San Vicente", "Santa Maria"],
-    "Llanera": ["Bayanan", "Bitas", "Magsaysay", "Manggahan", "Milan", "Poblacion", "San Isidro", "San Jose", "San Vicente"],
-    "Lupao": ["Bagong Silang", "Camascan", "Cayapa", "Cayanga", "Cuyapo", "Kangaro", "Langka", "San Jose", "San Vicente"],
-    "Muñoz": ["Bagong Silang", "Balinag", "Bulaon", "Bunga", "Cabunian", "Cananay", "Casaloy", "Gabaldon", "Librad", "Luna", "San Jose", "Santa Cruz"],
-    "Nampicuan": ["Bagong Sikat", "Bayo", "Bitas", "Calabuan", "Maligaya", "Nampicuan", "Poblacion", "San Antonio", "San Jose"],
-    "Pantabangan": ["Bagumbayan", "Buan", "Cansuso", "Dapdap", "Del Pilar", "Imelda", "Poblacion", "San Jose"],
-    "Peñaranda": ["Bansalangin", "Biclat", "Bubuyan", "Magtangola", "Magsaysay", "Maligaya", "Masilang", "Poblacion", "San Jose", "San Vicente"],
-    "Quezon": ["Baguio", "Bambang", "Bubuy", "Cagayan", "Dapdap", "Imbang", "Poblacion", "San Jose"],
-    "Rizal": ["Bucot", "Bulihan", "Canantong", "Dila-dila", "Elias Angeles", "Hampangan", "Hulo", "Kalabangan", "Poblacion", "San Vicente", "San Jose", "Santa Rosa"],
-    "San Antonio": ["Bagong Sikat", "Bulaon", "Luneta", "Poblacion", "San Isidro"],
-    "San Isidro": ["Bagong Silang", "Bayan", "Bulacan", "Cabaruan", "Magdalena", "Maligaya", "Manggahan", "Poblacion", "San Vicente"],
-    "San Jose": ["Bungabon", "Concepcion", "Gapan", "Guimba", "La Paz", "Licab", "Mabini", "Magsaysay", "Poblacion", "San Vicente", "Santa Maria"],
-    "San Leonardo": ["Bacala", "Bayan", "Bulong", "Cabuyao", "Cacanauan", "Concepcion", "Magsaysay", "Manggahan", "San Isidro", "San Vicente", "Santa Maria"],
-    "Santa Rosa": ["Bagumbayan", "Baguio", "Balingcanaway", "Bongabong", "Dila-dila", "Magsaysay", "Maligaya", "Poblacion", "San Isidro"],
-    "Santo Domingo": ["Bamban", "Baru-an", "Cabalintan", "Carmen", "Dela Paz", "Gulod", "Magsaysay", "Poblacion", "San Jose"],
-    "Talavera": ["Aliaga", "Alvila", "Bagumbayan", "Baliwag", "Bulaon", "Canarail", "Cangca", "Carmen", "Gulod", "Hulo", "Labrador", "Malabnang", "Poblacion", "San Vicente"],
-    "Talugtug": ["Bagumbayan", "Bataan", "Bulasan", "Cabalantian", "Canak", "Dapdap", "Malibay", "Poblacion", "San Vicente", "Santa Rosa"],
-    "Zaragoza": ["Banuang", "Biga", "Bagumbayan", "Bongabon", "Poblacion", "San Vicente"],
-
-    //Municipality of  pampanga and barangays
-    "Angeles City": ["Agapito Del Rosario", "Anunas", "Balibago", "Bical", "Capaya", "Cutcut", "Del Rosario", "Duquit", "Epifanio", "Pulungbulu", "San Jose", "San Nicolas", "Santo Rosario", "Sapangbato", "Telebastagan"],
-    "Apalit": ["Bamboo", "Banal", "Bata", "Bucal", "Cansinala", "Dila-Dila", "Janipaan", "Santo Cristo", "San Vicente", "Santo Tomas"],
-    "Arayat": ["Bagong Sikat", "Banga", "Bañadero", "Bulu", "Caduang Tete", "Cutcut", "San Pedro", "San Juan", "Santa Lucia"],
-    "Bacolor": ["Bacolor", "Bulaon", "Magsaysay", "San Vicente", "San Pablo", "Santo Niño"],
-    "Candaba": ["Bacong", "Bambang", "Cabuyao", "Capalangan", "Dulong Baybay", "Mabilog", "Malusac", "San Francisco", "San Luis", "Santo Rosario"],
-    "Floridablanca": ["Bamban", "Bayan", "Bocaue", "Bulaon", "Dela Paz", "Duquit", "Lusong", "San Jose", "San Pedro", "San Vicente"],
-    "Guagua": ["Balayong", "Bayan", "Bulaon", "Cameron", "Del Carmen", "Magsaysay", "Malusac", "Poblacion", "San Pedro", "Santo Rosario"],
-    "Lubao": ["Bañadero", "Bucal", "Dela Paz", "Mabalacat", "Malusac", "San Felipe", "San Miguel", "San Pablo", "San Pedro", "Santo Niño"],
-    "Mabalacat": ["Bamban", "Bayan", "Capas", "Dela Paz", "Laguna", "San Jose", "San Martin", "San Vicente", "Santo Rosario"],
-    "Macabebe": ["Bangan", "Burol", "Concepcion", "Dulong Baybay", "Malusac", "Mansilingan", "Poblacion", "San Isidro", "Santa Barbara", "Santa Lucia"],
-    "Masantol": ["Bagang", "Bamboo", "Bucal", "Capalangan", "Dela Paz", "Dulong Baybay", "Hapag", "Malusac", "Mansilingan", "Masantol", "San Jose", "San Miguel", "San Pablo", "San Pedro", "San Vicente", "Santo Niño", "Santo Tomas", "Sapangbato", "Sawa", "Tabuyucan", "Talang", "Tinang", "Tuloy", "Wawa", "Bacao"],
-    "Mexico": ["Bagong Bataan", "Balibago", "Dela Paz", "Poblacion", "San Antonio", "San Jose", "San Pedro", "Santo Rosario"],
-    "Porac": ["Bayan", "Bical", "Camachiles", "Dapdap", "Lambat", "Mabalacat", "Manibaug", "Santo Niño", "San Pedro"],
-    "San Fernando": ["Baliti", "Del Pilar", "Guadalupe", "Julius B. Villanueva", "Lourdes Sur", "Poblacion", "San Agustin", "San Isidro", "San Jose", "San Juan"],
-    "San Luis": ["Bagumbayan", "Bulaon", "Cansinala", "Dela Paz", "Maligaya", "Marangal", "San Fernando", "San Jose", "Santo Rosario"],
-    "San Simon": ["Baleg", "Balucuc", "San Jose", "Santo Tomas", "Santa Monica"],
-    "Sasmuan": ["Bamboo", "Buan", "Bulaon", "Guinbalay", "Lambat", "Malusac", "San Jose", "Santa Rosa"],
-
-    //tarlac
-    "Anao": ["Anao", "Baguio", "Bagong Bataan", "Cabitang", "Cabaluyan", "Calapacuan", "Camachile", "Dawis", "Dela Paz", "Guimba", "Malibong", "San Antonio", "San Jose", "San Juan", "San Pedro", "Santa Lucia"],
-    "Bamban": ["Bagumbayan", "Bamban", "Cabaluan", "Cacabe", "Cayanga", "Malacat", "San Jose", "San Nicolas", "San Pablo", "Santa Rosa"],
-    "Capas": ["Bamban", "Capas", "Cutcut", "Maruglu", "Mabalacat", "Manukang Bayan", "San Antonio", "San Jose", "San Juan", "Santa Juliana"],
-    "Concepcion": ["Bamban", "Concepcion", "Nambalan", "Poblacion", "San Jose", "San Juan", "San Pedro", "Santa Rita"],
-    "La Paz": ["Bacani", "Dela Paz", "Gomez", "La Paz", "Manalang", "San Isidro", "Santa Lucia", "Santo Domingo"],
-    "Mayantoc": ["Banga", "Banga", "Bebong", "Bitao", "Cacabe", "Gapan", "Lawang Bato", "Nampicuan", "San Francisco", "San Jose", "San Vicente"],
-    "Moncada": ["Bagong Sikat", "Balayong", "Bamban", "Canukang", "Concepcion", "Laoang", "Poblacion", "San Jose", "San Manuel", "San Rafael"],
-    "Paniqui": ["Aglipay", "Concepcion", "Lourdes", "Magsaysay", "Manat", "Paniqui", "San Antonio", "San Jose", "San Luis", "San Pedro"],
-    "San Jose": ["Banga", "Bucal", "Caniogan", "Dela Paz", "Guadalupe", "Laoang", "Poblacion", "San Jose", "Santa Lucia", "Santo Domingo"],
-    "San Manuel": ["Alua", "Bagong Sikat", "Concepcion", "Nambalan", "Poblacion", "San Felipe", "San Jose", "San Juan"],
-    "San Rafael": ["Bucao", "Bucal", "Maligaya", "Poblacion", "San Jose", "San Pedro", "Santa Rita"],
-    "Santa Ignacia": ["Balaoan", "Bani", "Banua", "Batang", "Bucal", "Dapdap", "Japad", "Maligaya", "Poblacion", "San Jose"],
-    "Tarlac City": ["Aguinaldo", "Balayong", "Balingcanaway", "Bamban", "Bata", "Calibutbut", "Labrador", "Lourdes", "Magsaysay", "Poblacion", "San Jose", "San Vicente", "Santo Cristo"],
-    "Victoria": ["Abonador", "Bagong Bait", "Balungao", "Buan", "Bulac", "Dapdap", "Laguerta", "Liberty", "Lipa", "Mabalacat", "San Jose", "San Vicente", "Santa Rosa"],
-
-// zambales
-    "Botolan": ["Bagalangit", "Balaybay", "Banga", "Bebes", "Biclat", "Bunga", "Capas", "Columban", "Culo", "Dapdap", "Dela Paz", "Gatpuno", "Mabini", "Magsaysay", "Maloma", "Mansalay", "Mansalay", "Masinloc", "Nangalisan", "Owa", "Poblacion", "San Isidro", "San Juan", "San Pedro", "Santo Rosario"],
-    "Castillejos": ["Bagong Sikat", "Bago", "Bamban", "Bantay", "Bebes", "Gumain", "Malaki", "Magsaysay", "Maligaya", "Poblacion", "San Antonio", "San Felipe", "San Isidro", "San Marcelino", "San Pedro", "Santa Rosa"],
-    "Iba": ["Aguinaldo", "Balayong", "Bamban", "Batasan", "Bulaon", "Burakan", "Cabaritan", "Casilagan", "Cruz", "Del Pilar", "La Paz", "Magsaysay", "Poblacion", "San Antonio", "San Isidro", "Santa Rita"],
-    "Masinloc": ["Bacala", "Bacala", "Balayong", "Bato", "Binoclutan", "Bunga", "Dona Cecilia", "Maloma", "Magsaysay", "Poblacion", "San Agustin", "San Andres", "San Marcelino"],
-    "Olongapo City": ["Barretto", "East Tapinac", "New Ilalim", "New Cabalan", "Old Cabalan", "Palanan", "San Antonio", "San Isidro", "San Marcelino", "Wawandue"],
-    "San Antonio": ["Bagong Silang", "Bani", "Bamban", "Banao", "Bayanan", "Bucal", "Dalayap", "Gapan", "Malaguin", "Poblacion", "San Jose", "San Vicente"],
-    "San Felipe": ["Anoling", "Baba", "Baca", "Balayong", "Baro", "Bayanan", "Biclat", "Cayabu", "Gatpuno", "Magsaysay", "Maligaya", "Nangalisan", "Poblacion", "San Vicente", "Santa Rita"],
-    "San Marcelino": ["Bagong Silang", "Balaybay", "Bucal", "Cabangaan", "Dalisdis", "Dalit", "Malusac", "Magsaysay", "Poblacion", "San Jose", "San Vicente"],
-    "San Narciso": ["Bamban", "Bulaon", "Bulaw", "Caguiat", "Culis", "Magsaysay", "Malaguin", "Poblacion", "San Jose", "San Vicente"],
-    "Santa Cruz": ["Bagong Sikat", "Bacala", "Bamban", "Baro", "Cangay", "Del Pilar", "Dela Paz", "San Jose", "San Vicente"],
-    "Subic": ["Alibangbang", "Balayong", "Bamban", "Batan", "Cabatangan", "Cruz", "Dela Paz", "Magsaysay", "Poblacion", "San Antonio", "San Isidro", "San Marcelino", "San Vicente"],
-    "Zambales": ["Bagumbayan", "Camarine", "Linao", "Mangato", "Manuel A. Roxas", "Maguindanao", "Malayo", "Narciso", "Olongapo City", "Pangasinan", "Poblacion", "San Antonio", "San Felipe"], 
-
-    // pag bubuoin lahat for now central luzon lang meron
-  };
-
-  const cityMunicipalityData = {
-    "Aurora": ["Baler", "Casiguran", "Dilasag", "Dinalungan", "Dingalan", "Dipaculao", "Maria Aurora", "San Luis"],
-    "Bataan": ["Balanga", "Abucay", "Bagac", "Dinalupihan", "Hermosa", "Limay", "Mariveles", "Morong", "Orani", "Orion", "Pilar", "Samal"],
-    "Bulacan": ["Angat", "Balagtas", "Baliuag", "Bocaue", "Bulakan", "Bustos", "Calumpit", "Doña Remedios Trinidad", "Guiguinto", "Hagonoy", "Malolos", "Marilao", "Meycauayan", "Norzagaray", "Obando", "Pandi", "Paombong", "Plaridel", "Pulilan", "San Ildefonso", "San Jose del Monte", "San Miguel", "San Rafael", "Santa Maria"],
-   "Nueva Ecija": ["Aliaga", "Bongabon", "Cabiao", "Cabanatuan", "Carranglan", "Cuyapo", "Gapan", "Gabaldon", "General Mamerto Natividad", "General Tinio", "Guimba", "Jaen", "Laur", "Licab", "Llanera", "Lupao", "Muñoz", "Nampicuan", "Pantabangan", "Peñaranda", "Quezon", "Rizal", "San Antonio", "San Isidro", "San Jose", "San Leonardo", "Santa Rosa", "Santo Domingo", "Talavera", "Talugtug", "Zaragoza"],
-   "Pampanga": ["Angeles City", "Apalit", "Arayat", "Bacolor", "Candaba", "Floridablanca", "Guagua", "Lubao", "Mabalacat", "Macabebe","Masantol", "Mexico", "Porac", "San Fernando", "San Luis", "San Simon", "Sasmuan"],
-   "Tarlac": ["Anao", "Bamban", "Capas", "Concepcion", "La Paz", "Mayantoc", "Moncada", "Paniqui", "San Jose", "San Manuel", "San Rafael", "Santa Ignacia", "Tarlac City", "Victoria"],
-   "Zambales": ["Botolan", "Castillejos", "Iba", "Masinloc", "Olongapo City", "San Antonio", "San Felipe", "San Marcelino", "San Narciso", "Santa Cruz", "Subic", "Zambales"],
-   "Abra": ["Bangued", "Boliney", "Bucay", "Bucloc", "Daguioman", "Danglas", "Dolores", "La Paz", "Lacub", "Lagangilang", "Lagayan", "Langiden", "Licuan-Baay", "Luba", "Malibcong", "Manabo", "Penarrubia", "Pidigan", "Pilar", "Sallapadan", "San Isidro", "San Juan", "San Quintin", "Tayum", "Tineg", "Tubo", "Villaviciosa"],
-    "Benguet": ["Atok", "Baguio City", "Bakun", "Bokod", "Buguias", "Itogon", "Kabayan", "Kapangan", "Kibungan", "La Trinidad", "Mankayan", "Sablan", "Tuba", "Tublay"],
-    "Ifugao": ["Aguinaldo", "Alfonso Lista", "Asipulo", "Banaue", "Hingyon", "Hungduan", "Kiangan", "Lagawe", "Lamut", "Mayoyao", "Tinoc"],
-    "Ilocos Norte": ["Adams", "Bacarra", "Badoc", "Bangui", "Banna", "Batac City", "Burgos", "Carasi", "Currimao", "Dingras", "Dumalneg", "Laoag City", "Marcos", "Nueva Era", "Pagudpud", "Paoay", "Pasuquin", "Piddig", "Pinili", "San Nicolas", "Sarrat", "Solsona", "Vintar"],
-    "Ilocos Sur": ["Alilem", "Banayoyo", "Bantay", "Burgos", "Cabugao", "Candon City", "Caoayan", "Cervantes", "Galimuyod", "Gregorio del Pilar", "Lidlidda", "Magsingal", "Nagbukel", "Narvacan", "Quirino", "Salcedo", "San Emilio", "San Esteban", "San Ildefonso", "San Juan", "San Vicente", "Santa", "Santa Catalina", "Santa Cruz", "Santa Lucia", "Santa Maria", "Santiago", "Santo Domingo", "Sigay", "Sinait", "Sugpon", "Suyo", "Tagudin", "Vigan City"],
-    "Kalinga": ["Balbalan", "Lubuagan", "Pasil", "Pinukpuk", "Rizal", "Tabuk City", "Tanudan", "Tinglayan"],
-    "La Union": ["Agoo", "Aringay", "Bacnotan", "Bagulin", "Balaoan", "Bangar", "Bauang", "Burgos", "Caba", "Luna", "Naguilian", "Pugo", "Rosario", "San Fernando City", "San Gabriel", "San Juan", "Santo Tomas", "Santol", "Sudipen", "Tubao"],
-    "Mountain Province": ["Barlig", "Bauko", "Besao", "Bontoc", "Natonin", "Paracelis", "Sabangan", "Sadanga", "Sagada", "Tadian"],
-    "Quezon": ["Agdangan", "Alabat", "Atimonan", "Buenavista", "Burdeos", "Calauag", "Candelaria", "Catanauan", "Dolores", "General Luna", "General Nakar", "Guinayangan", "Gumaca", "Infanta", "Jomalig", "Lopez", "Lucban", "Lucena City", "Macalelon", "Mauban", "Mulanay", "Padre Burgos", "Pagbilao", "Panukulan", "Patnanungan", "Perez", "Pitogo", "Plaridel", "Polillo", "Quezon", "Real", "Sampaloc", "San Andres", "San Antonio", "San Francisco", "San Narciso", "Sariaya", "Tagkawayan", "Tayabas City", "Tiaong", "Unisan"],
-    "Rizal": ["Angono", "Antipolo City", "Baras", "Binangonan", "Cainta", "Cardona", "Jalajala", "Morong", "Pililla", "Rodriguez", "San Mateo", "Tanay", "Taytay", "Teresa"],
-    "Camarines Norte": ["Basud", "Capalonga", "Daet", "Jose Panganiban", "Labo", "Mercedes", "Paracale", "San Lorenzo Ruiz", "San Vicente", "Santa Elena", "Talisay", "Vinzons"],
-    "Camarines Sur": ["Baao", "Balatan", "Bato", "Bombon", "Buhi", "Bula", "Cabusao", "Calabanga", "Camaligan", "Canaman", "Caramoan", "Del Gallego", "Gainza", "Garchitorena", "Goa", "Iriga City", "Lagonoy", "Libmanan", "Lupi", "Magarao", "Milaor", "Minalabac", "Nabua", "Naga City", "Ocampo", "Pamplona", "Pasacao", "Presentacion", "Ragay", "Sagnay", "San Fernando", "San Jose", "Sipocot", "Siruma", "Tigaon", "Tinambac"],
-    "Catanduanes": ["Bagamanoc", "Baras", "Bato", "Caramoran", "Gigmoto", "Pandan", "Panganiban", "San Andres", "San Miguel", "Viga", "Virac"],
-    "Sorsogon": ["Barcelona", "Bulan", "Bulusan", "Casiguran", "Castilla", "Donsol", "Gubat", "Irosin", "Juban", "Magallanes", "Matnog", "Pilar", "Prieto Diaz", "Santa Magdalena", "Sorsogon City"],
-};
 
 function updateCityMunicipality() {
   const provinceSelect = document.getElementById("edit_province");
@@ -1254,26 +1487,18 @@ window.onclick = function(event) {
     }
 };
 
-// Open the edit modal
 function openEditModal(vendorID) {
     var editModal = document.getElementById("editModal");
     editModal.style.display = "block";
 
-    // Fetch vendor data by ID and populate form fields (existing logic)
+    // Fetch vendor data by ID and populate form fields
     var xhr = new XMLHttpRequest();
     xhr.onreadystatechange = function () {
         if (xhr.readyState === XMLHttpRequest.DONE) {
             if (xhr.status === 200) {
                 var vendor = JSON.parse(xhr.responseText);
 
-                if (vendor.error) {
-                    console.error(vendor.error);
-                    alert('Vendor not found');
-                    closeEditModal();
-                    return;
-                }
-
-                // Populate the form fields with the vendor information (existing logic)
+                // Populate the form fields with the vendor information
                 document.getElementById('edit_vendor_id').value = vendor.vendorID;
                 document.getElementById('edit_fName').value = vendor.fname;
                 document.getElementById('edit_mname').value = vendor.mname;
@@ -1283,16 +1508,28 @@ function openEditModal(vendorID) {
                 document.getElementById('edit_birthday').value = vendor.birthday;
                 document.getElementById('edit_age').value = vendor.age;
                 document.getElementById('edit_contactNo').value = vendor.contactNo;
-                document.getElementById('edit_province').value = vendor.province;
-
-                // Call updateCityMunicipality and updateBarangay to set the correct values
-                updateCityMunicipality();
-                document.getElementById('edit_municipality').value = vendor.municipality;
-                updateBarangay();
-                document.getElementById('edit_barangay').value = vendor.barangay;
-
+                document.getElementById('edit_lotArea').value = vendor.lotArea;
                 document.getElementById('edit_houseNo').value = vendor.houseNo;
                 document.getElementById('edit_streetname').value = vendor.streetname;
+
+                // Load Provinces
+                loadProvinces(function() {
+                    // Set existing province
+                    document.getElementById('edit_province').value = vendor.province;
+                    
+                    // Load Municipalities for the selected province
+                    loadMunicipalities(vendor.province, function() {
+                        // Set existing municipality
+                        document.getElementById('edit_municipality').value = vendor.municipality;
+
+                        // Load Barangays for the selected municipality
+                        loadBarangays(vendor.municipality, function() {
+                            // Set existing barangay
+                            document.getElementById('edit_barangay').value = vendor.barangay;
+                        });
+                    });
+                });
+
             } else {
                 console.error(xhr.statusText);
                 alert('Error fetching vendor data');
@@ -1302,6 +1539,8 @@ function openEditModal(vendorID) {
     xhr.open("GET", "get_vendor.php?vendorID=" + vendorID, true);
     xhr.send();
 }
+
+
 
 // Event listener for close button
 var closeModalBtn = document.querySelector('.close-modal');
@@ -1328,6 +1567,7 @@ function openQRModal(vendorID) {
                "Birthday: " + vendor.birthday + "\n" +
                "Age: " + vendor.age + "\n" +
                "Contact No: " + vendor.contactNo + "\n" +
+               "Lot Area: " + vendor.lotArea + "\n" +
                "Province: " + vendor.province + "\n" +
                "Municipality: " + vendor.municipality + "\n" +
                "Barangay: " + vendor.barangay + "\n" +
@@ -1481,6 +1721,31 @@ window.onclick = function(event) {
     qrModal.style.display = "none";
   }
 };
+
+        // Function to open the logout modal
+        function openLogoutModal() {
+            var logoutModal = document.getElementById("logoutModal");
+            logoutModal.style.display = "block";
+        }
+
+        // Function to close the logout modal
+        function closeLogoutModal() {
+            var logoutModal = document.getElementById("logoutModal");
+            logoutModal.style.display = "none";
+        }
+
+        // Function to confirm the logout
+        function confirmLogout() {
+            window.location.href = 'index.html'; // Redirect to your logout page
+        }
+
+        // Ensure the logout modal closes when clicking outside of it
+        window.onclick = function(event) {
+            var logoutModal = document.getElementById("logoutModal");
+            if (event.target == logoutModal) {
+                closeLogoutModal();
+            }
+        };
 </script>
 </body>
 </html>
